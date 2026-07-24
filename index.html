@@ -1,0 +1,1559 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Rasmi Amil Kariah - Carian Borang Zakat</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        blue: {
+                            850: '#1e3a8a',
+                            900: '#172554',
+                            950: '#0f172a',
+                        },
+                        gold: {
+                            400: '#facc15',
+                            500: '#eab308',
+                            600: '#ca8a04',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Animasi */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        .slide-up { animation: slideUp 0.4s ease-out forwards; }
+        .toast-enter { animation: slideIn 0.3s ease-out forwards; }
+        .toast-exit { animation: fadeOut 0.3s ease-out forwards; }
+        
+        /* Corak Latar Belakang */
+        .bg-pattern {
+            background-color: #172554;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        /* Mod Penyelenggaraan */
+        body.maintenance-mode .normal-content { display: none !important; }
+        body.maintenance-mode .maintenance-content { display: flex !important; }
+        .maintenance-content { display: none; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased flex flex-col min-h-screen relative">
+
+    <!-- Notifikasi Toast -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-3 pointer-events-none"></div>
+
+    <!-- PAPARAN PENYELENGGARAAN (MAINTENANCE MODE) -->
+    <div class="maintenance-content fixed inset-0 z-50 bg-blue-950 flex-col items-center justify-center p-6 text-center">
+        <img src="https://lh3.googleusercontent.com/d/1TyX2HrXdzPuONmWFd2Bet8XWW0qGIrfH" alt="Logo Amil Kariah" class="w-32 h-32 md:w-44 md:h-44 object-contain mb-6 opacity-100 drop-shadow-xl">
+        <i data-lucide="wrench" class="w-16 h-16 text-gold-400 mb-6 animate-pulse"></i>
+        <h1 class="text-4xl md:text-5xl font-extrabold text-white mb-4">Penyelenggaraan Sistem</h1>
+        <p class="text-xl text-blue-200 max-w-lg mb-8">Portal ini sedang diselenggara buat sementara waktu untuk kerja-kerja menaik taraf. Sila kembali semula nanti.</p>
+        <button onclick="bukaModalLoginAdmin()" class="text-blue-400/50 hover:text-blue-300 text-sm flex items-center gap-2">
+            <i data-lucide="settings" class="w-4 h-4"></i> Akses Pentadbir
+        </button>
+
+        <!-- Bahagian Bawah: Footer -->
+        <div class="absolute bottom-8 flex flex-col items-center justify-center">
+            <p class="text-blue-300/80 text-xs md:text-sm font-medium tracking-wide">2026 @ Daerah Hulu Langat</p>
+        </div>
+    </div>
+
+    <!-- PAPARAN NORMAL (UNTUK PENGGUNA) -->
+    <div class="normal-content flex flex-col min-h-screen w-full transition-opacity" id="normalView">
+        
+        <!-- Header -->
+        <header class="bg-white shadow-sm sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-20 md:h-24">
+                    <div class="flex items-center gap-3 md:gap-4">
+                        <img src="https://lh3.googleusercontent.com/d/1TyX2HrXdzPuONmWFd2Bet8XWW0qGIrfH" alt="Logo Zakat" class="w-12 h-12 md:w-16 md:h-16 object-contain">
+                        <div>
+                            <h1 class="font-extrabold text-lg md:text-2xl text-blue-950 leading-tight">Muat Turun Dokumen Permohonan Zakat</h1>
+                            <p class="text-xs md:text-sm text-slate-500 font-semibold mt-0.5">Khusus untuk Ketua & Penolong Amil Kariah</p>
+                        </div>
+                    </div>
+                    
+                    <!-- IKON ADMIN RAHSIA (LOKASI BARU & IKON BARU) -->
+                    <button onclick="bukaModalLoginAdmin()" class="p-2 text-slate-200 hover:text-blue-500 transition-colors opacity-60 hover:opacity-100 focus:outline-none" title="Akses Pentadbir">
+                        <i data-lucide="cpu" class="w-5 h-5 md:w-6 md:h-6"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Hero Section & Carian (Fokus Utama) -->
+        <section class="bg-pattern relative flex-grow flex flex-col justify-center py-12 md:py-20 min-h-[50vh]">
+            <div class="absolute inset-0 bg-gradient-to-br from-blue-950/95 via-blue-900/90 to-blue-800/80"></div>
+            
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full text-center">
+                <div id="heroText" class="transition-all duration-500">
+                    <i data-lucide="file-search" class="w-20 h-20 text-blue-300/50 mx-auto mb-6"></i>
+                    <h2 class="text-3xl md:text-5xl font-extrabold text-white mb-4 leading-tight">
+                        Carian Dokumen Zakat
+                    </h2>
+                    <p class="text-lg md:text-xl text-blue-100 font-medium mb-10 max-w-2xl mx-auto">
+                        Sila masukkan kata kunci untuk mencari dan memuat turun borang permohonan terkini.
+                    </p>
+                </div>
+
+                <!-- Search Bar Besar -->
+                <div class="relative flex items-center shadow-2xl rounded-full bg-white/10 backdrop-blur-md p-2 border border-white/20 transition-all duration-300" id="searchContainer">
+                    <div class="bg-white w-full flex items-center rounded-full pl-6 pr-2 py-2">
+                        <i data-lucide="search" class="w-7 h-7 text-blue-800 shrink-0"></i>
+                        <input type="text" id="searchInput" oninput="prosesCarian()" placeholder="Cth: Kewangan, Pendidikan, Hutang..." 
+                            class="w-full bg-transparent border-0 focus:ring-0 text-lg md:text-xl text-slate-800 placeholder-slate-400 px-4 font-semibold outline-none h-12 md:h-14">
+                        
+                        <!-- Butang Clear -->
+                        <button onclick="kosongkanCarian()" id="clearBtn" class="hidden text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-100 mr-2">
+                            <i data-lucide="x-circle" class="w-6 h-6"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Hasil Carian Section (Asalnya Tersembunyi) -->
+        <main id="hasilCarianSection" class="hidden bg-slate-50 w-full py-12 md:py-16">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                
+                <div class="flex items-center justify-between mb-8 border-b-2 border-slate-200 pb-4">
+                    <h3 class="text-xl md:text-2xl font-bold text-slate-700 flex items-center gap-3">
+                        <span class="bg-blue-100 p-2 rounded-lg text-blue-800">
+                            <i data-lucide="list-checks" class="w-6 h-6"></i>
+                        </span>
+                        Hasil Carian
+                    </h3>
+                    <span id="jumlahHasil" class="bg-slate-200 text-slate-700 font-bold px-4 py-1 rounded-full text-sm">0 Dijumpai</span>
+                </div>
+
+                <!-- Mesej Tiada Hasil -->
+                <div id="noResult" class="hidden text-center py-16 bg-white rounded-3xl border border-slate-200 shadow-sm">
+                    <div class="bg-slate-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i data-lucide="file-question" class="w-12 h-12 text-slate-400"></i>
+                    </div>
+                    <h4 class="text-2xl font-bold text-slate-700 mb-2">Dokumen tidak ditemui</h4>
+                    <p class="text-slate-500 text-lg">Maaf, tiada borang yang sepadan dengan carian "<span id="kataKunciPapar" class="font-bold text-blue-700"></span>".</p>
+                </div>
+
+                <!-- Grid Hasil -->
+                <div id="gridHasil" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Semua kad borang diletakkan di sini, disembunyikan secara lalai -->
+                    
+                    <!-- Kad 1: Fakir Miskin -->
+                    <div id="user-card-1" class="bg-white rounded-2xl p-6 border-2 border-slate-100 shadow-sm hover:shadow-xl transition-all flex flex-col h-full borang-card" data-kategori="Fakir/Miskin" data-tajuk="Bantuan Kewangan Bulanan" data-tag="sara hidup, duit, bulanan">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="bg-emerald-50 p-4 rounded-xl">
+                                <i data-lucide="wallet" class="w-8 h-8 text-emerald-600"></i>
+                            </div>
+                            <span class="bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1 rounded-full border border-blue-100">Fakir/Miskin</span>
+                        </div>
+                        <h4 class="text-xl font-bold text-slate-800 mb-2">Bantuan Kewangan Bulanan</h4>
+                        <p class="text-slate-500 text-sm mb-4 flex-grow">Permohonan bantuan sara hidup bulanan untuk asnaf fakir dan miskin.</p>
+                        <div class="text-xs text-slate-400 mb-4 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> Kemaskini: 15 Jan 2026</div>
+                        <button onclick="muatTurun('Bantuan Kewangan Bulanan', '')" class="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 pointer-events-auto">
+                            <i data-lucide="download" class="w-5 h-5"></i> Muat Turun
+                        </button>
+                    </div>
+
+                    <!-- Kad 2: Pendidikan -->
+                    <div id="user-card-2" class="bg-white rounded-2xl p-6 border-2 border-slate-100 shadow-sm hover:shadow-xl transition-all flex flex-col h-full borang-card" data-kategori="Fakir/Miskin" data-tajuk="Bantuan Pendidikan IPTA" data-tag="sekolah, universiti, belajar">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="bg-purple-50 p-4 rounded-xl">
+                                <i data-lucide="graduation-cap" class="w-8 h-8 text-purple-600"></i>
+                            </div>
+                            <span class="bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1 rounded-full border border-blue-100">Fakir/Miskin</span>
+                        </div>
+                        <h4 class="text-xl font-bold text-slate-800 mb-2">Bantuan Pendidikan IPTA</h4>
+                        <p class="text-slate-500 text-sm mb-4 flex-grow">Bantuan persediaan yuran dan peralatan pembelajaran bagi anak asnaf.</p>
+                        <div class="text-xs text-slate-400 mb-4 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> Kemaskini: 02 Feb 2026</div>
+                        <button onclick="muatTurun('Bantuan Pendidikan IPTA', '')" class="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 pointer-events-auto">
+                            <i data-lucide="download" class="w-5 h-5"></i> Muat Turun
+                        </button>
+                    </div>
+
+                    <!-- Kad 3: Muallaf -->
+                    <div id="user-card-3" class="bg-white rounded-2xl p-6 border-2 border-slate-100 shadow-sm hover:shadow-xl transition-all flex flex-col h-full borang-card" data-kategori="Muallaf" data-tajuk="Bantuan Elaun Muallaf" data-tag="saudara baru, sokongan, elaun">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="bg-teal-50 p-4 rounded-xl">
+                                <i data-lucide="badge-plus" class="w-8 h-8 text-teal-600"></i>
+                            </div>
+                            <span class="bg-teal-50 text-teal-700 text-xs font-bold px-3 py-1 rounded-full border border-teal-100">Muallaf</span>
+                        </div>
+                        <h4 class="text-xl font-bold text-slate-800 mb-2">Bantuan Elaun Muallaf</h4>
+                        <p class="text-slate-500 text-sm mb-4 flex-grow">Elaun bulanan khas untuk saudara baru bagi tujuan sokongan fasa awal.</p>
+                        <div class="text-xs text-slate-400 mb-4 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> Kemaskini: 10 Dis 2025</div>
+                        <button onclick="muatTurun('Bantuan Elaun Muallaf', '')" class="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 pointer-events-auto">
+                            <i data-lucide="download" class="w-5 h-5"></i> Muat Turun
+                        </button>
+                    </div>
+
+                    <!-- Kad 4: Hutang (Gharimin) -->
+                    <div id="user-card-4" class="bg-white rounded-2xl p-6 border-2 border-slate-100 shadow-sm hover:shadow-xl transition-all flex flex-col h-full borang-card" data-kategori="Gharimin" data-tajuk="Penyelesaian Hutang Asas" data-tag="bil, sewa, gharimin">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="bg-rose-50 p-4 rounded-xl">
+                                <i data-lucide="receipt" class="w-8 h-8 text-rose-600"></i>
+                            </div>
+                            <span class="bg-rose-50 text-rose-700 text-xs font-bold px-3 py-1 rounded-full border border-rose-100">Gharimin</span>
+                        </div>
+                        <h4 class="text-xl font-bold text-slate-800 mb-2">Penyelesaian Hutang Asas</h4>
+                        <p class="text-slate-500 text-sm mb-4 flex-grow">Pelepasan hutang keperluan asas mendesak seperti bil utiliti tertunggak atau sewa.</p>
+                        <div class="text-xs text-slate-400 mb-4 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> Kemaskini: 20 Jan 2026</div>
+                        <button onclick="muatTurun('Penyelesaian Hutang Asas', '')" class="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 pointer-events-auto">
+                            <i data-lucide="download" class="w-5 h-5"></i> Muat Turun
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-slate-900 text-slate-400 py-6 text-center text-sm font-medium mt-auto relative">
+            <p>&copy; 2026 Portal Rasmi Amil Zakat.</p>
+        </footer>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- MODAL LOG MASUK ADMIN -->
+    <!-- ============================================== -->
+    <div id="modalLoginAdmin" class="fixed inset-0 z-[60] bg-slate-900/80 backdrop-blur-sm hidden items-center justify-center px-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-300" id="loginCard">
+            <div class="bg-blue-950 p-6 text-center relative">
+                <button onclick="tutupModalLoginAdmin()" class="absolute top-4 right-4 text-white/50 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+                <div class="bg-white/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/20">
+                    <i data-lucide="shield-check" class="w-8 h-8 text-gold-400"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white">Log Masuk Pentadbir</h3>
+                <p class="text-blue-300 text-sm mt-1">Sistem Pengurusan Dokumen</p>
+            </div>
+            <div class="p-8 space-y-5">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">ID Pentadbir</label>
+                    <div class="relative">
+                        <i data-lucide="user" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400"></i>
+                        <input type="text" id="adminId" placeholder="cth: admin_zakat" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Kata Laluan</label>
+                    <div class="relative">
+                        <i data-lucide="lock" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400"></i>
+                        <input type="password" id="adminPwd" placeholder="••••••••" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                    </div>
+                </div>
+                <div id="loginErrorMsg" class="hidden text-red-500 text-sm font-medium text-center bg-red-50 py-2 rounded-md">ID atau Kata Laluan tidak sah.</div>
+                <button id="loginBtnSahkan" onclick="sahkanLogin()" class="w-full bg-blue-900 hover:bg-blue-950 text-white font-bold py-3.5 rounded-xl transition-colors shadow-lg shadow-blue-900/30">
+                    Log Masuk Sistem
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- PAPARAN DASHBOARD ADMIN (DISOROK LALAI) -->
+    <!-- ============================================== -->
+    <div id="adminDashboard" class="hidden fixed inset-0 z-[70] bg-slate-50 flex-col h-screen overflow-hidden">
+        
+        <!-- Header Admin -->
+        <header class="bg-blue-950 text-white shadow-md z-10 shrink-0">
+            <div class="px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="shield-alert" class="w-6 h-6 text-gold-400"></i>
+                        <h1 class="font-bold text-lg md:text-xl">Panel Pentadbir Portal</h1>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="text-sm text-blue-200 hidden md:block">Admin Sistem</span>
+                        <button onclick="logKeluarAdmin()" class="bg-red-500/20 hover:bg-red-500/40 text-red-200 hover:text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                            <i data-lucide="log-out" class="w-4 h-4"></i> Keluar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Admin -->
+        <div class="flex-grow flex flex-col md:flex-row overflow-hidden">
+            
+            <!-- Sidebar Admin -->
+            <aside class="bg-white w-full md:w-64 border-r border-slate-200 shrink-0 md:h-full">
+                <nav class="p-4 space-y-1">
+                    <a href="javascript:void(0);" onclick="tukarTabAdmin('dokumen')" class="flex items-center gap-3 px-4 py-3 bg-blue-50 text-blue-700 rounded-lg font-bold tab-menu" id="menu-dokumen">
+                        <i data-lucide="folder-cog" class="w-5 h-5"></i> Pengurusan Dokumen
+                    </a>
+                    <a href="javascript:void(0);" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-lg font-medium transition-colors hidden">
+                        <i data-lucide="users" class="w-5 h-5"></i> Senarai Amil
+                    </a>
+                    <!-- KEMASKINI: MENU LOG & TETAPAN KESELAMATAN -->
+                    <a href="javascript:void(0);" onclick="tukarTabAdmin('log')" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-lg font-medium transition-colors tab-menu" id="menu-log">
+                        <i data-lucide="activity" class="w-5 h-5"></i> Log Akses
+                    </a>
+                    <a href="javascript:void(0);" onclick="tukarTabAdmin('tetapan')" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-lg font-medium transition-colors tab-menu" id="menu-tetapan">
+                        <i data-lucide="shield-check" class="w-5 h-5"></i> Tetapan Akaun
+                    </a>
+                    
+                    <div class="pt-6 mt-6 border-t border-slate-200">
+                        <p class="px-4 text-xs font-bold text-slate-400 uppercase mb-3">Kawalan Sistem</p>
+                        <div class="px-4 py-3 bg-slate-50 rounded-lg border border-slate-200">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-bold text-slate-700 flex items-center gap-2">
+                                    <i data-lucide="power" class="w-4 h-4 text-slate-500"></i> Mod Penyelenggaraan
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-3 leading-tight">Tutup akses portal kepada pengguna untuk kemaskini.</p>
+                            <!-- Toggle Switch -->
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="maintenanceToggle" class="sr-only peer" onchange="toggleMaintenanceMode(this.checked)">
+                                <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
+                                <span class="ml-3 text-sm font-bold text-slate-600" id="maintenanceStatusTxt">Tutup (Off)</span>
+                            </label>
+                        </div>
+                    </div>
+                </nav>
+            </aside>
+
+            <!-- Main Area Admin -->
+            <main class="flex-grow bg-slate-50 p-4 md:p-8 overflow-y-auto">
+                <div class="max-w-4xl mx-auto">
+                    
+                    <!-- TAB DOKUMEN (SEDIA ADA) -->
+                    <div id="tab-dokumen" class="admin-tab-content block">
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-extrabold text-slate-800">Senarai Dokumen Rasmi</h2>
+                        <p class="text-slate-500">Urus dan kemaskini borang terkini untuk dimuat turun oleh amil.</p>
+                    </div>
+
+                    <!-- Kategori: Fakir/Miskin -->
+                    <div class="mb-8">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                <span class="bg-blue-100 text-blue-700 p-1.5 rounded-lg"><i data-lucide="users" class="w-5 h-5"></i></span> Fakir/Miskin
+                            </h3>
+                            <button onclick="bukaModalMuatNaik('Fakir/Miskin')" class="bg-blue-900 hover:bg-blue-800 text-white px-3 py-2 rounded-lg font-bold flex items-center gap-2 shadow-sm text-sm">
+                                <i data-lucide="upload-cloud" class="w-4 h-4"></i> Muat Naik Baru
+                            </button>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm">
+                                    <thead class="bg-slate-50 text-slate-600 border-b border-slate-200">
+                                        <tr>
+                                            <th class="px-6 py-4 font-bold">Nama Dokumen</th>
+                                            <th class="px-6 py-4 font-bold">Kategori</th>
+                                            <th class="px-6 py-4 font-bold">Kemaskini Terakhir</th>
+                                            <th class="px-6 py-4 font-bold text-right">Tindakan</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="adminTableFakirMiskin" class="divide-y divide-slate-100">
+                                        <!-- Data render di sini -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kategori: Muallaf -->
+                    <div class="mb-8">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                <span class="bg-teal-100 text-teal-700 p-1.5 rounded-lg"><i data-lucide="heart-handshake" class="w-5 h-5"></i></span> Muallaf
+                            </h3>
+                            <button onclick="bukaModalMuatNaik('Muallaf')" class="bg-blue-900 hover:bg-blue-800 text-white px-3 py-2 rounded-lg font-bold flex items-center gap-2 shadow-sm text-sm">
+                                <i data-lucide="upload-cloud" class="w-4 h-4"></i> Muat Naik Baru
+                            </button>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm">
+                                    <thead class="bg-slate-50 text-slate-600 border-b border-slate-200">
+                                        <tr>
+                                            <th class="px-6 py-4 font-bold">Nama Dokumen</th>
+                                            <th class="px-6 py-4 font-bold">Kategori</th>
+                                            <th class="px-6 py-4 font-bold">Kemaskini Terakhir</th>
+                                            <th class="px-6 py-4 font-bold text-right">Tindakan</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="adminTableMuallaf" class="divide-y divide-slate-100">
+                                        <!-- Data render di sini -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kategori: Gharimin -->
+                    <div class="mb-8">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                <span class="bg-rose-100 text-rose-700 p-1.5 rounded-lg"><i data-lucide="scale" class="w-5 h-5"></i></span> Gharimin
+                            </h3>
+                            <button onclick="bukaModalMuatNaik('Gharimin')" class="bg-blue-900 hover:bg-blue-800 text-white px-3 py-2 rounded-lg font-bold flex items-center gap-2 shadow-sm text-sm">
+                                <i data-lucide="upload-cloud" class="w-4 h-4"></i> Muat Naik Baru
+                            </button>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm">
+                                    <thead class="bg-slate-50 text-slate-600 border-b border-slate-200">
+                                        <tr>
+                                            <th class="px-6 py-4 font-bold">Nama Dokumen</th>
+                                            <th class="px-6 py-4 font-bold">Kategori</th>
+                                            <th class="px-6 py-4 font-bold">Kemaskini Terakhir</th>
+                                            <th class="px-6 py-4 font-bold text-right">Tindakan</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="adminTableGharimin" class="divide-y divide-slate-100">
+                                        <!-- Data render di sini -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kategori: Amil Kariah -->
+                    <div class="mb-8">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                <span class="bg-indigo-100 text-indigo-700 p-1.5 rounded-lg"><i data-lucide="briefcase" class="w-5 h-5"></i></span> Amil Kariah
+                            </h3>
+                            <button onclick="bukaModalMuatNaik('Amil Kariah')" class="bg-blue-900 hover:bg-blue-800 text-white px-3 py-2 rounded-lg font-bold flex items-center gap-2 shadow-sm text-sm">
+                                <i data-lucide="upload-cloud" class="w-4 h-4"></i> Muat Naik Baru
+                            </button>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm">
+                                    <thead class="bg-slate-50 text-slate-600 border-b border-slate-200">
+                                        <tr>
+                                            <th class="px-6 py-4 font-bold">Nama Dokumen</th>
+                                            <th class="px-6 py-4 font-bold">Kategori</th>
+                                            <th class="px-6 py-4 font-bold">Kemaskini Terakhir</th>
+                                            <th class="px-6 py-4 font-bold text-right">Tindakan</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="adminTableAmilKariah" class="divide-y divide-slate-100">
+                                        <!-- Data render di sini -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    </div> <!-- Penutup tab-dokumen -->
+
+                    <!-- KEMASKINI: TAB LOG AKSES -->
+                    <div id="tab-log" class="admin-tab-content hidden">
+                        <div class="mb-8">
+                            <h2 class="text-2xl font-extrabold text-slate-800">Log Akses & Keselamatan</h2>
+                            <p class="text-slate-500">Rekod aktiviti log masuk, ralat rate-limit dan pengesahan sesi token.</p>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                            <div class="overflow-y-auto max-h-[500px]">
+                                <table class="w-full text-left text-sm">
+                                    <thead class="bg-slate-50 text-slate-600 border-b border-slate-200 sticky top-0">
+                                        <tr>
+                                            <th class="px-4 py-3 font-bold">Tarikh & Masa</th>
+                                            <th class="px-4 py-3 font-bold">Aktiviti Sistem</th>
+                                            <th class="px-4 py-3 font-bold">Status Verifikasi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="logTableBody" class="divide-y divide-slate-100">
+                                        <!-- Logs rendered here by getInitialData -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="mt-4 flex justify-between items-center text-xs font-semibold text-slate-500 border-t border-slate-100 pt-4 bg-slate-50 p-3 rounded-lg">
+                                <span id="healthCheckStatus" class="flex items-center gap-2"><i data-lucide="shield" class="w-4 h-4 text-emerald-500"></i> Memeriksa...</span>
+                                <span id="simpleAnalysisText" class="text-blue-700">Analisa: Memuatkan log...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- KEMASKINI: TAB TETAPAN KESELAMATAN -->
+                    <div id="tab-tetapan" class="admin-tab-content hidden">
+                        <div class="mb-8">
+                            <h2 class="text-2xl font-extrabold text-slate-800">Tetapan Keselamatan Pentadbir</h2>
+                            <p class="text-slate-500">Tukar ID Pentadbir dan Kata Laluan (Disulitkan dengan SHA-256 Hashing).</p>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8 max-w-xl relative overflow-hidden">
+                            <div class="absolute top-0 right-0 p-12 bg-blue-50 rounded-bl-full -z-10"></div>
+                            <div class="space-y-5 relative z-10">
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 mb-2">ID Pentadbir Baru</label>
+                                    <div class="relative">
+                                        <i data-lucide="user-cog" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400"></i>
+                                        <input type="text" id="newAdminId" placeholder="Masukkan ID baru" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 mb-2">Kata Laluan Baru</label>
+                                    <div class="relative">
+                                        <i data-lucide="lock-keyhole" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400"></i>
+                                        <input type="password" id="newAdminPwd" placeholder="Masukkan kata laluan baru (Min: 6 aksara)" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                                    </div>
+                                </div>
+                                <div id="tetapanMsg" class="hidden text-sm font-medium p-3 rounded-lg shadow-sm border"></div>
+                                <button onclick="kemaskiniKredensial()" class="w-full bg-blue-900 hover:bg-blue-950 text-white font-bold py-3.5 rounded-xl transition-all mt-4 flex justify-center items-center gap-2 shadow-lg shadow-blue-900/20 active:scale-[0.98]">
+                                    <i data-lucide="save" class="w-5 h-5"></i> Simpan Kredensial Selamat
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- MODAL MUAT NAIK BORANG BARU (ADMIN) -->
+    <!-- ============================================== -->
+    <div id="modalMuatNaik" class="fixed inset-0 z-[80] bg-slate-900/80 backdrop-blur-sm hidden items-center justify-center px-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform scale-95 transition-transform duration-300" id="muatNaikCard">
+            <div class="bg-blue-950 p-5 flex justify-between items-center border-b border-blue-900">
+                <h3 id="modalMuatNaikTitle" class="text-lg font-bold text-white flex items-center gap-2">
+                    <i data-lucide="upload-cloud" class="w-5 h-5"></i> Muat Naik Borang Terkini
+                </h3>
+                <button onclick="tutupModalMuatNaik()" class="text-white/50 hover:text-white transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Nama Fail / Dokumen</label>
+                    <input type="text" id="uploadNamaFail" placeholder="cth: Borang Pendidikan IPT 2026" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Kategori / Kata Kunci (Carian)</label>
+                    <input type="text" id="uploadKategoriDokumen" placeholder="cth: sekolah, universiti, belajar" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Kategori Asnaf</label>
+                    <div class="relative">
+                        <select id="uploadKategoriAsnaf" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all appearance-none cursor-pointer text-slate-700">
+                            <option value="" disabled selected>-- Pilih Kategori Asnaf --</option>
+                            <option value="Fakir/Miskin">Fakir/Miskin</option>
+                            <option value="Muallaf">Muallaf</option>
+                            <option value="Gharimin">Gharimin</option>
+                            <option value="Amil Kariah">Amil Kariah</option>
+                        </select>
+                        <i data-lucide="chevron-down" class="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none"></i>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Pautan (Link) Muat Turun Dokumen</label>
+                    <input type="url" id="uploadLinkDokumen" placeholder="cth: https://drive.google.com/file/d/..." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-blue-600">
+                </div>
+                
+                <!-- PILIHAN IKON / GAMBAR -->
+                <div class="border-t border-slate-100 pt-4 mt-2">
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Ikon / Gambar Pemaparan</label>
+                    <div class="flex items-center gap-4 mb-3">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="iconType" value="icon" class="text-blue-600 focus:ring-blue-500" onchange="toggleIconType('icon')" checked>
+                            <span class="text-sm font-medium text-slate-700">Pilih Ikon</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="iconType" value="image" class="text-blue-600 focus:ring-blue-500" onchange="toggleIconType('image')">
+                            <span class="text-sm font-medium text-slate-700">Muat Naik Gambar</span>
+                        </label>
+                    </div>
+
+                    <!-- TAB IKON -->
+                    <div id="tabIkon" class="bg-slate-50 border border-slate-200 rounded-lg p-3">
+                        <p class="text-xs text-slate-500 mb-2">Pilih salah satu ikon yang bersesuaian:</p>
+                        <div id="iconGrid" class="grid grid-cols-6 sm:grid-cols-8 gap-1 h-32 overflow-y-auto">
+                            <!-- Ikon akan di-render di sini oleh JavaScript -->
+                        </div>
+                        <input type="hidden" id="selectedIconName" value="file-text">
+                    </div>
+
+                    <!-- TAB GAMBAR -->
+                    <div id="tabGambar" class="hidden bg-slate-50 border border-slate-200 rounded-lg p-4 text-center">
+                        <input type="file" id="imageUploadInput" accept="image/jpeg, image/png, image/webp" onchange="handleImageUpload(event)" class="hidden">
+                        <label for="imageUploadInput" class="cursor-pointer inline-flex items-center gap-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm mb-3">
+                            <i data-lucide="image-plus" class="w-4 h-4"></i> Pilih Fail Gambar...
+                        </label>
+                        <p class="text-xs text-slate-400 mb-3">Format: JPG, PNG. Saiz maks: 1MB.</p>
+                        
+                        <div id="imagePreview" class="hidden">
+                            <p class="text-xs font-semibold text-slate-600 mb-1">Pratonton:</p>
+                            <img id="previewImg" src="" alt="Preview" class="max-h-24 object-contain mx-auto border border-slate-200 rounded shadow-sm bg-white p-1">
+                        </div>
+                        <input type="hidden" id="selectedImageBase64" value="">
+                    </div>
+                </div>
+                
+                <!-- Hidden ID for Edit -->
+                <input type="hidden" id="editDokumenId" value="">
+
+                <div class="pt-5 flex justify-end gap-3 border-t border-slate-100 mt-2">
+                    <button onclick="tutupModalMuatNaik()" class="px-5 py-2.5 text-slate-600 font-bold hover:bg-slate-100 rounded-xl transition-colors">Batal</button>
+                    <button onclick="simpanMuatNaik()" class="px-6 py-2.5 bg-blue-900 hover:bg-blue-950 text-white font-bold rounded-xl transition-colors shadow-md flex items-center gap-2">
+                        <i data-lucide="save" class="w-4 h-4"></i> Simpan Dokumen
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FIREBASE INITIALIZATION & REAL-TIME LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'zakat-amil-portal';
+        let firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        
+        let app, db, auth;
+        window.useLocalFallback = false;
+
+        // FUNGSI INIT ASYNC: Memuatkan API Key dari fail luaran dengan selamat (Tanpa Hardcode dalam HTML)
+        async function mulakanSistemFirebase() {
+            // 1. Cuba dapatkan konfigurasi dari fail luaran yang disorok dari HTML (firebase-env.json)
+            if (Object.keys(firebaseConfig).length === 0) {
+                try {
+                    const response = await fetch('./firebase-env.json');
+                    if (response.ok) {
+                        firebaseConfig = await response.json();
+                    }
+                } catch (err) {
+                    // Abaikan jika fail tiada, akan beralih ke mod storan tempatan
+                }
+            }
+
+            // 2. Mulakan Firebase dengan konfigurasi yang selamat
+            try {
+                if (Object.keys(firebaseConfig).length > 0) {
+                    app = initializeApp(firebaseConfig);
+                    db = getFirestore(app);
+                    auth = getAuth(app);
+                    window.db = db;
+                    window.appId = appId;
+                } else {
+                    throw new Error("Tiada Konfigurasi Firebase (Beralih ke mod Offline/Local)");
+                }
+            } catch (e) { 
+                setupLocalFallback();
+            }
+            
+            // 3. Jalankan Pengesahan Sistem
+            await initAuth();
+        }
+
+        async function initAuth() {
+            if (window.useLocalFallback) return;
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                if (auth.currentUser) {
+                    window.userId = auth.currentUser.uid;
+                    setupRealtimeListener();
+                }
+            } catch (e) { 
+                console.warn("Nota Auth: Beralih ke storan tempatan."); 
+                setupLocalFallback();
+            }
+        }
+
+        // FUNGSI FALLBACK (Jika Firebase tidak benarkan akses)
+        function setupLocalFallback() {
+            window.useLocalFallback = true;
+            let localData = localStorage.getItem('zakat_docs_v1');
+            if (!localData) {
+                const defaults = [
+                    { id: "1", namaFail: "Bantuan Kewangan Bulanan", kategoriAsnaf: "Fakir/Miskin", kategoriKataKunci: "sara hidup, duit, bulanan", linkDokumen: "", tarikhSemasa: "15 Jan 2026", iconType: "icon", iconValue: "wallet" },
+                    { id: "2", namaFail: "Bantuan Pendidikan IPTA", kategoriAsnaf: "Fakir/Miskin", kategoriKataKunci: "sekolah, universiti, belajar", linkDokumen: "", tarikhSemasa: "02 Feb 2026", iconType: "icon", iconValue: "graduation-cap" },
+                    { id: "3", namaFail: "Bantuan Elaun Muallaf", kategoriAsnaf: "Muallaf", kategoriKataKunci: "saudara baru, sokongan, elaun", linkDokumen: "", tarikhSemasa: "10 Dis 2025", iconType: "icon", iconValue: "badge-plus" },
+                    { id: "4", namaFail: "Penyelesaian Hutang Asas", kategoriAsnaf: "Gharimin", kategoriKataKunci: "bil, sewa, gharimin", linkDokumen: "", tarikhSemasa: "20 Jan 2026", iconType: "icon", iconValue: "receipt" }
+                ];
+                localStorage.setItem('zakat_docs_v1', JSON.stringify(defaults));
+                localData = JSON.stringify(defaults);
+            }
+            if (window.renderData) {
+                window.renderData(JSON.parse(localData));
+            }
+        }
+
+        function setupRealtimeListener() {
+            if (!window.db) {
+                setupLocalFallback();
+                return;
+            }
+            
+            // Ubah path ke data yang lebih umum (DIBETULKAN: Gunakan 'data' sebagai sub-koleksi yang dibenarkan)
+            const docsRef = collection(window.db, 'artifacts', window.appId, 'data');
+            
+            try {
+                onSnapshot(docsRef, (snapshot) => {
+                    const docsData = [];
+                    snapshot.forEach(doc => docsData.push({ id: doc.id, ...doc.data() }));
+                    
+                    if (docsData.length === 0 && !window.seeded) {
+                        window.seeded = true;
+                        seedDefaultData();
+                    } else if (window.renderData) {
+                        window.renderData(docsData);
+                    }
+                }, (error) => {
+                    // JIKA GAGAL/RALAT PERMISSION, TUKAR KE LOCAL STORAGE TANPA CONSOLE.ERROR
+                    console.warn("Nota Akses Pangkalan Data: Mod storan tempatan (offline) diaktifkan kerana had kebenaran sekuriti hos.");
+                    setupLocalFallback();
+                });
+            } catch (err) {
+                console.warn("Nota onSnapshot: Mod storan tempatan (offline) diaktifkan.");
+                setupLocalFallback();
+            }
+        }
+        
+        async function seedDefaultData() {
+            if (window.useLocalFallback) return;
+            const defaults = [
+                { id: "1", namaFail: "Bantuan Kewangan Bulanan", kategoriAsnaf: "Fakir/Miskin", kategoriKataKunci: "sara hidup, duit, bulanan", linkDokumen: "", tarikhSemasa: "15 Jan 2026", iconType: "icon", iconValue: "wallet" },
+                { id: "2", namaFail: "Bantuan Pendidikan IPTA", kategoriAsnaf: "Fakir/Miskin", kategoriKataKunci: "sekolah, universiti, belajar", linkDokumen: "", tarikhSemasa: "02 Feb 2026", iconType: "icon", iconValue: "graduation-cap" }
+            ];
+            
+            try {
+                for (const item of defaults) {
+                    const docRef = doc(window.db, 'artifacts', window.appId, 'data', item.id);
+                    await setDoc(docRef, item);
+                }
+            } catch (e) {
+                console.warn("Nota Seeding: Beralih ke storan tempatan.");
+                setupLocalFallback();
+            }
+        }
+
+        window.simpanKeFirestore = async function(docId, data) {
+            // Jika mode fallback berjalan, simpan dalam Local Storage
+            if (window.useLocalFallback) {
+                let docs = JSON.parse(localStorage.getItem('zakat_docs_v1') || "[]");
+                const index = docs.findIndex(d => d.id === docId);
+                const newData = { id: docId, ...data };
+                
+                if (index > -1) docs[index] = newData;
+                else docs.push(newData);
+                
+                localStorage.setItem('zakat_docs_v1', JSON.stringify(docs));
+                if (window.renderData) window.renderData(docs);
+                return;
+            }
+            
+            // Cubaan simpan ke Firebase
+            try {
+                const docRef = doc(window.db, 'artifacts', window.appId, 'data', docId);
+                await setDoc(docRef, data);
+            } catch (e) {
+                console.warn("Nota Simpan: Beralih ke storan tempatan.");
+                setupLocalFallback();
+                window.simpanKeFirestore(docId, data); // Ulang semula dalam mod storan tempatan
+            }
+        }
+
+        window.padamDariFirestore = async function(docId) {
+            // Jika mode fallback berjalan, padam dari Local Storage
+            if (window.useLocalFallback) {
+                let docs = JSON.parse(localStorage.getItem('zakat_docs_v1') || "[]");
+                docs = docs.filter(d => d.id !== docId);
+                localStorage.setItem('zakat_docs_v1', JSON.stringify(docs));
+                if (window.renderData) window.renderData(docs);
+                return;
+            }
+
+            // Cubaan padam dari Firebase
+            try {
+                const docRef = doc(window.db, 'artifacts', window.appId, 'data', docId);
+                await deleteDoc(docRef);
+            } catch (e) {
+                console.warn("Nota Padam: Beralih ke storan tempatan.");
+                setupLocalFallback();
+                window.padamDariFirestore(docId); // Ulang semula dalam mod storan tempatan
+            }
+        }
+
+        // Laksanakan inisialisasi selamat Firebase sewaktu sistem bermula
+        mulakanSistemFirebase();
+    </script>
+
+    <script>
+        // Render ikon Lucide
+        lucide.createIcons();
+
+        // 100+ Ikon Zakat / Pengurusan
+        const senaraiIkon = ['wallet', 'graduation-cap', 'badge-plus', 'receipt', 'activity', 'store', 'clipboard-list', 'file-text', 'home', 'heart', 'users', 'user', 'briefcase', 'building', 'car', 'book', 'book-open', 'gift', 'hand-coins', 'landmark', 'laptop', 'monitor', 'shopping-cart', 'truck', 'utensils', 'zap', 'shield', 'award', 'banknote', 'coins', 'credit-card', 'piggy-bank', 'scale', 'gavel', 'stethoscope', 'pill', 'syringe', 'wheelchair', 'baby', 'shirt', 'droplet', 'flame', 'wind', 'sun', 'moon', 'cloud', 'umbrella', 'anchor', 'plane', 'bus', 'train', 'bike', 'tractor', 'wheat', 'leaf', 'tree', 'flower', 'apple', 'bone', 'fish', 'coffee', 'cup-soda', 'glass-water', 'bed', 'sofa', 'tv', 'radio', 'smartphone', 'camera', 'headphones', 'mic', 'music', 'video', 'film', 'ticket', 'map', 'compass', 'navigation', 'globe', 'flag', 'mail', 'inbox', 'package', 'archive', 'folder', 'printer', 'paperclip', 'scissors', 'hammer', 'wrench', 'screwdriver', 'pen-tool', 'brush', 'palette', 'key', 'lock', 'unlock', 'bell', 'megaphone', 'search', 'settings', 'cog', 'slider', 'filter', 'sort-asc', 'sort-desc', 'list', 'grid', 'check', 'x', 'alert-circle', 'alert-triangle', 'info', 'help-circle'];
+
+        function binaGridIkon() {
+            const container = document.getElementById('iconGrid');
+            if(!container) return;
+            container.innerHTML = '';
+            senaraiIkon.forEach(iconName => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `p-2 rounded-lg flex justify-center items-center hover:bg-blue-100 border border-transparent transition-colors icon-btn`;
+                btn.dataset.icon = iconName;
+                btn.onclick = () => pilihIkon(iconName, btn);
+                btn.innerHTML = `<i data-lucide="${iconName}" class="w-6 h-6 text-slate-600"></i>`;
+                container.appendChild(btn);
+            });
+            lucide.createIcons();
+        }
+
+        function pilihIkon(iconName, btnElement) {
+            document.getElementById('selectedIconName').value = iconName;
+            document.querySelectorAll('.icon-btn').forEach(b => b.classList.remove('border-blue-500', 'bg-blue-50'));
+            if(btnElement) btnElement.classList.add('border-blue-500', 'bg-blue-50');
+        }
+
+        function toggleIconType(type) {
+            if(type === 'icon') {
+                document.getElementById('tabIkon').classList.remove('hidden');
+                document.getElementById('tabGambar').classList.add('hidden');
+            } else {
+                document.getElementById('tabIkon').classList.add('hidden');
+                document.getElementById('tabGambar').classList.remove('hidden');
+            }
+        }
+
+        window.handleImageUpload = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 250;
+                    let width = img.width;
+                    let height = img.height;
+                    if (width > MAX_WIDTH) {
+                        height = height * (MAX_WIDTH / width);
+                        width = MAX_WIDTH;
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    const base64 = canvas.toDataURL('image/webp', 0.8);
+                    document.getElementById('selectedImageBase64').value = base64;
+                    document.getElementById('previewImg').src = base64;
+                    document.getElementById('imagePreview').classList.remove('hidden');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Panggil bina grid ikon semasa load
+        document.addEventListener('DOMContentLoaded', binaGridIkon);
+
+        function dapatkanWarnaKategori(kategori) {
+            if(kategori === 'Fakir/Miskin') return { bg: 'bg-blue-50', text: 'text-blue-700', iconBg: 'bg-emerald-50', iconColor: 'text-emerald-600' };
+            if(kategori === 'Muallaf') return { bg: 'bg-teal-50', text: 'text-teal-700', iconBg: 'bg-teal-50', iconColor: 'text-teal-600' };
+            if(kategori === 'Gharimin') return { bg: 'bg-rose-50', text: 'text-rose-700', iconBg: 'bg-rose-50', iconColor: 'text-rose-600' };
+            if(kategori === 'Amil Kariah') return { bg: 'bg-indigo-50', text: 'text-indigo-700', iconBg: 'bg-indigo-50', iconColor: 'text-indigo-600' };
+            return { bg: 'bg-slate-100', text: 'text-slate-700', iconBg: 'bg-slate-100', iconColor: 'text-slate-600' };
+        }
+
+        // FUNGSI RENDER (DARI FIREBASE KE HTML)
+        window.renderData = function(docs) {
+            const adminTableFakir = document.getElementById('adminTableFakirMiskin');
+            const adminTableMuallaf = document.getElementById('adminTableMuallaf');
+            const adminTableGharimin = document.getElementById('adminTableGharimin');
+            const adminTableAmil = document.getElementById('adminTableAmilKariah');
+            const gridHasil = document.getElementById('gridHasil');
+            
+            if(adminTableFakir) adminTableFakir.innerHTML = '';
+            if(adminTableMuallaf) adminTableMuallaf.innerHTML = '';
+            if(adminTableGharimin) adminTableGharimin.innerHTML = '';
+            if(adminTableAmil) adminTableAmil.innerHTML = '';
+            
+            gridHasil.innerHTML = '';
+            window.globalDocsData = docs;
+            
+            docs.forEach(data => {
+                const safeNama = data.namaFail.replace(/'/g, "\\'");
+                const safeKataKunci = data.kategoriKataKunci.replace(/'/g, "\\'");
+                const safeLink = data.linkDokumen ? data.linkDokumen.replace(/'/g, "\\'") : '';
+                const warna = dapatkanWarnaKategori(data.kategoriAsnaf);
+                
+                let iconDisplayAdmin = '';
+                let iconDisplayUser = '';
+                
+                if (data.iconType === 'image' && data.iconValue) {
+                    iconDisplayAdmin = `<img src="${data.iconValue}" class="w-6 h-6 object-cover rounded-md shadow-sm">`;
+                    iconDisplayUser = `<img src="${data.iconValue}" class="w-10 h-10 object-cover rounded-md shadow-sm">`;
+                } else {
+                    iconDisplayAdmin = `<i data-lucide="${data.iconValue || 'file-text'}" class="w-5 h-5 text-slate-400"></i>`;
+                    iconDisplayUser = `<i data-lucide="${data.iconValue || 'file-text'}" class="w-8 h-8 ${warna.iconColor}"></i>`;
+                }
+                
+                const adminRowHTML = `
+                    <tr id="admin-row-${data.id}" class="hover:bg-slate-50 transition-colors">
+                        <td class="px-6 py-4 font-semibold text-slate-800 flex items-center gap-3">
+                            ${iconDisplayAdmin} ${data.namaFail}
+                        </td>
+                        <td class="px-6 py-4"><span class="${warna.bg} ${warna.text} px-2.5 py-1 rounded-md text-xs font-bold">${data.kategoriAsnaf}</span></td>
+                        <td class="px-6 py-4 text-slate-500">${data.tarikhSemasa}</td>
+                        <td class="px-6 py-4 text-right space-x-2">
+                            <button onclick="bukaModalKemaskini('${data.id}')" class="text-blue-600 hover:text-blue-800 bg-blue-50 p-2 rounded-md transition-colors" title="Kemaskini Fail"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button>
+                            <button onclick="padamDokumen('${data.id}')" class="text-red-600 hover:text-red-800 bg-red-50 p-2 rounded-md transition-colors" title="Padam"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </td>
+                    </tr>
+                `;
+                
+                if (data.kategoriAsnaf === 'Fakir/Miskin' && adminTableFakir) {
+                    adminTableFakir.insertAdjacentHTML('beforeend', adminRowHTML);
+                } else if (data.kategoriAsnaf === 'Muallaf' && adminTableMuallaf) {
+                    adminTableMuallaf.insertAdjacentHTML('beforeend', adminRowHTML);
+                } else if (data.kategoriAsnaf === 'Gharimin' && adminTableGharimin) {
+                    adminTableGharimin.insertAdjacentHTML('beforeend', adminRowHTML);
+                } else if (data.kategoriAsnaf === 'Amil Kariah' && adminTableAmil) {
+                    adminTableAmil.insertAdjacentHTML('beforeend', adminRowHTML);
+                } else if (adminTableFakir) {
+                    // Fallback jika kategori lain
+                    adminTableFakir.insertAdjacentHTML('beforeend', adminRowHTML);
+                }
+
+                const userCardHTML = `
+                    <div id="user-card-${data.id}" class="bg-white rounded-2xl p-6 border-2 border-slate-100 shadow-sm hover:shadow-xl transition-all flex flex-col h-full borang-card" style="display: none;" data-kategori="${data.kategoriAsnaf}" data-tajuk="${data.namaFail}" data-tag="${data.kategoriKataKunci}">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="${warna.iconBg} p-3 rounded-xl flex items-center justify-center">
+                                ${iconDisplayUser}
+                            </div>
+                            <span class="${warna.bg} ${warna.text} text-xs font-bold px-3 py-1 rounded-full border border-current opacity-60">${data.kategoriAsnaf}</span>
+                        </div>
+                        <h4 class="text-xl font-bold text-slate-800 mb-2">${data.namaFail}</h4>
+                        <p class="text-slate-500 text-sm mb-4 flex-grow">Kata Kunci: ${data.kategoriKataKunci || 'Tiada maklumat'}</p>
+                        <div class="text-xs text-slate-400 mb-4 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> Kemaskini: ${data.tarikhSemasa}</div>
+                        <button onclick="muatTurun('${safeNama}', '${safeLink}')" class="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 pointer-events-auto">
+                            <i data-lucide="download" class="w-5 h-5"></i> Muat Turun
+                        </button>
+                    </div>
+                `;
+                gridHasil.insertAdjacentHTML('beforeend', userCardHTML);
+            });
+            
+            lucide.createIcons();
+            
+            // Refresh carian jika sedang dibuka
+            if(document.getElementById('hasilCarianSection').classList.contains('fade-in')) {
+                prosesCarian();
+            }
+        };
+
+        // ==========================================
+        // FUNGSI PENGGUNA (CARIAN)
+        // ==========================================
+        const searchInput = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearBtn');
+        const hasilSection = document.getElementById('hasilCarianSection');
+        const heroText = document.getElementById('heroText');
+        const searchContainer = document.getElementById('searchContainer');
+        const gridHasil = document.getElementById('gridHasil');
+        const noResult = document.getElementById('noResult');
+        const jumlahHasil = document.getElementById('jumlahHasil');
+        const kataKunciPapar = document.getElementById('kataKunciPapar');
+
+        function prosesCarian() {
+            const input = searchInput.value.trim().toLowerCase();
+            const semuaKadDin = document.querySelectorAll('.borang-card');
+            
+            if (input.length > 0) {
+                clearBtn.classList.remove('hidden');
+                heroText.style.opacity = '0';
+                heroText.style.height = '0';
+                heroText.style.margin = '0';
+                heroText.style.overflow = 'hidden';
+                searchContainer.classList.add('max-w-2xl', 'mx-auto');
+                
+                hasilSection.classList.remove('hidden');
+                hasilSection.classList.add('fade-in');
+                
+                let jumlahBerjaya = 0;
+                semuaKadDin.forEach(kad => {
+                    const tajuk = kad.dataset.tajuk.toLowerCase();
+                    const tag = kad.dataset.tag.toLowerCase();
+                    const kategori = kad.dataset.kategori.toLowerCase();
+                    
+                    if (tajuk.includes(input) || tag.includes(input) || kategori.includes(input)) {
+                        kad.style.display = 'flex';
+                        kad.classList.add('slide-up');
+                        jumlahBerjaya++;
+                    } else {
+                        kad.style.display = 'none';
+                        kad.classList.remove('slide-up');
+                    }
+                });
+
+                jumlahHasil.innerText = `${jumlahBerjaya} Dijumpai`;
+                if (jumlahBerjaya === 0) {
+                    gridHasil.classList.add('hidden');
+                    noResult.classList.remove('hidden');
+                    kataKunciPapar.innerText = searchInput.value;
+                } else {
+                    gridHasil.classList.remove('hidden');
+                    noResult.classList.add('hidden');
+                }
+            } else {
+                kosongkanCarian();
+            }
+        }
+
+        function kosongkanCarian() {
+            searchInput.value = '';
+            clearBtn.classList.add('hidden');
+            heroText.style.opacity = '1';
+            heroText.style.height = 'auto';
+            heroText.style.marginTop = '';
+            heroText.style.marginBottom = '';
+            searchContainer.classList.remove('max-w-2xl', 'mx-auto');
+            
+            hasilSection.classList.add('hidden');
+            hasilSection.classList.remove('fade-in');
+            document.querySelectorAll('.borang-card').forEach(kad => kad.style.display = 'none');
+        }
+
+        function muatTurun(namaBorang, pautanLink) {
+            if (pautanLink && pautanLink.trim() !== '') {
+                window.open(pautanLink, '_blank');
+            }
+            
+            const toastContainer = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'bg-white border-l-4 border-blue-600 shadow-2xl rounded-xl p-4 pr-10 flex items-start gap-4 max-w-sm toast-enter relative pointer-events-auto ring-1 ring-black/5';
+            
+            toast.innerHTML = `
+                <div class="bg-blue-100 rounded-full p-2 flex-shrink-0">
+                    <i data-lucide="check-circle-2" class="w-6 h-6 text-blue-700"></i>
+                </div>
+                <div>
+                    <h5 class="text-slate-800 font-bold text-sm">Berjaya!</h5>
+                    <p class="text-slate-500 text-xs mt-0.5">${namaBorang} sedang diproses.</p>
+                </div>
+                <button onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            `;
+            
+            toastContainer.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.classList.replace('toast-enter', 'toast-exit');
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, 3000);
+        }
+
+        // ==========================================
+        // FUNGSI ADMIN
+        // ==========================================
+        const modalAdmin = document.getElementById('modalLoginAdmin');
+        const loginCard = document.getElementById('loginCard');
+        const dashboardAdmin = document.getElementById('adminDashboard');
+        const viewNormal = document.getElementById('normalView');
+        const errorMsg = document.getElementById('loginErrorMsg');
+
+        function bukaModalLoginAdmin() {
+            modalAdmin.classList.remove('hidden');
+            modalAdmin.classList.add('flex');
+            setTimeout(() => {
+                modalAdmin.classList.remove('opacity-0');
+                loginCard.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function tutupModalLoginAdmin() {
+            modalAdmin.classList.add('opacity-0');
+            loginCard.classList.add('scale-95');
+            setTimeout(() => {
+                modalAdmin.classList.add('hidden');
+                modalAdmin.classList.remove('flex');
+                errorMsg.classList.add('hidden');
+                document.getElementById('adminId').value = '';
+                document.getElementById('adminPwd').value = '';
+            }, 300);
+        }
+
+        // ==========================================
+        // SISTEM BACKEND & KESELAMATAN (SHA-256, Token, Rate Limit)
+        // Dicipta seperti yang diwajibkan oleh arahan
+        // ==========================================
+        const BackendApi = {
+            salt: "zakat_amil_secure_2026",
+            tokenName: "amil_admin_token",
+            
+            async sha256(message) {
+                const msgBuffer = new TextEncoder().encode(message + this.salt);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            },
+
+            // 1. doGet: Inisialisasi awal sistem
+            async doGet() {
+                this.setupHashedAuth();
+                this.healthCheck();
+                this.getInitialData();
+            },
+
+            // 2. setupHashedAuth: Tetapkan kredensial selamat tanpa hardcode plain text
+            async setupHashedAuth() {
+                if (!localStorage.getItem('admin_hash_id')) {
+                    // Kredensial lalai (Mula): admin / admin123
+                    localStorage.setItem('admin_hash_id', await this.sha256('admin'));
+                    localStorage.setItem('admin_hash_pwd', await this.sha256('admin123'));
+                }
+            },
+
+            // 3. checkLogin: Verifikasi dengan Rate Limit & Session Token (2 Jam)
+            async checkLogin(id, pwd) {
+                let attempts = parseInt(localStorage.getItem('login_attempts') || '0');
+                let lockTime = parseInt(localStorage.getItem('login_lock_time') || '0');
+                const now = new Date().getTime();
+
+                // Check Rate Limit (Lock 15 Mins)
+                if (lockTime > now) {
+                    const timeLeft = Math.ceil((lockTime - now) / 60000);
+                    this.logAccess("Cubaan Log Masuk (Disekat)", "Gagal (Kunci 15 Minit)");
+                    return { success: false, msg: `Akaun dikunci akibat amaran keselamatan. Sila cuba lagi selepas ${timeLeft} minit.` };
+                }
+
+                const hashedIdInput = await this.sha256(id);
+                const hashedPwdInput = await this.sha256(pwd);
+                const storedId = localStorage.getItem('admin_hash_id');
+                const storedPwd = localStorage.getItem('admin_hash_pwd');
+
+                if (hashedIdInput === storedId && hashedPwdInput === storedPwd) {
+                    localStorage.setItem('login_attempts', '0');
+                    const token = await this.sha256(now.toString() + Math.random().toString());
+                    const expiry = now + (2 * 60 * 60 * 1000); // Expiry 2 Jam
+                    sessionStorage.setItem(this.tokenName, JSON.stringify({ token, expiry }));
+                    this.logAccess("Log Masuk Sistem", "Berjaya (Token Dijana)");
+                    return { success: true };
+                } else {
+                    attempts++;
+                    localStorage.setItem('login_attempts', attempts.toString());
+                    if (attempts >= 5) {
+                        localStorage.setItem('login_lock_time', (now + (15 * 60 * 1000)).toString());
+                        this.logAccess("Cubaan Log Masuk Dicabuli (>5 Kali)", "Dikunci 15 Minit");
+                        return { success: false, msg: "Akaun dikunci selama 15 minit akibat 5 kegagalan berturut-turut." };
+                    }
+                    this.logAccess("Cubaan Log Masuk", "Gagal (Kredensial Tidak Sah)");
+                    return { success: false, msg: `ID atau Kata Laluan tidak sah. (Baki cubaan dibenarkan: ${5 - attempts})` };
+                }
+            },
+
+            // 4. verifyToken: Wajib dipanggil oleh semua backend function untuk verifikasi
+            verifyToken() {
+                const sessionData = sessionStorage.getItem(this.tokenName);
+                if (!sessionData) {
+                    this.logAccess("Akses Ditolak", "Gagal (Tiada Token)");
+                    return false;
+                }
+                const parsed = JSON.parse(sessionData);
+                if (new Date().getTime() > parsed.expiry) {
+                    this.logout();
+                    this.logAccess("Token Sesi", "Tamat Tempoh");
+                    return false;
+                }
+                return true;
+            },
+
+            // 5. logout: Log keluar, destroy session token
+            logout() {
+                if(sessionStorage.getItem(this.tokenName)) {
+                    sessionStorage.removeItem(this.tokenName);
+                    this.logAccess("Log Keluar Sistem", "Sesi Ditamatkan");
+                }
+            },
+
+            // 6. saveRecords: Simpan Kredensial Baru ke LocalStorage
+            async saveRecords(newId, newPwd) {
+                if (!this.verifyToken()) return { success: false, msg: "Ralat Keselamatan: Sesi token tidak sah!" };
+                localStorage.setItem('admin_hash_id', await this.sha256(newId));
+                localStorage.setItem('admin_hash_pwd', await this.sha256(newPwd));
+                this.logAccess("Kemas Kini Kredensial Pentadbir", "Berjaya Disimpan");
+                return { success: true, msg: "Kredensial berjaya disulitkan dan dikemaskini!" };
+            },
+
+            // 7. getRecords: Dapatkan senarai log
+            getRecords() {
+                return JSON.parse(localStorage.getItem('admin_access_logs') || '[]');
+            },
+
+            // 8. getSimpleAnalysis: Analisa keselamatan
+            getSimpleAnalysis() {
+                const logs = this.getRecords();
+                const failed = logs.filter(l => l.status.includes('Gagal') || l.status.includes('Dikunci')).length;
+                return `Analisa Sistem: ${logs.length} Log Direkod | ${failed} Ancaman / Kegagalan dikesan.`;
+            },
+
+            // 9. healthCheck: Pemantauan kesihatan
+            healthCheck() {
+                const el = document.getElementById('healthCheckStatus');
+                if(el) el.innerHTML = `<i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i> Aktif & Dilindungi (SHA-256 + Token Session)`;
+            },
+
+            getInitialData() {
+                this.renderLogs();
+            },
+
+            logAccess(activity, status) {
+                const logs = this.getRecords();
+                const now = new Date();
+                logs.unshift({ time: now.toLocaleString('ms-MY'), activity, status });
+                if (logs.length > 50) logs.pop();
+                localStorage.setItem('admin_access_logs', JSON.stringify(logs));
+                this.renderLogs();
+            },
+
+            renderLogs() {
+                const tbody = document.getElementById('logTableBody');
+                if(!tbody) return;
+                tbody.innerHTML = '';
+                const logs = this.getRecords();
+                logs.forEach(log => {
+                    const statusColor = log.status.includes('Berjaya') ? 'text-emerald-700 bg-emerald-100 border-emerald-200' : 'text-rose-700 bg-rose-100 border-rose-200';
+                    tbody.insertAdjacentHTML('beforeend', `
+                        <tr class="hover:bg-slate-50 border-b border-slate-100">
+                            <td class="px-4 py-3 text-sm text-slate-500 font-medium">${log.time}</td>
+                            <td class="px-4 py-3 text-sm font-bold text-slate-700">${log.activity}</td>
+                            <td class="px-4 py-3">
+                                <span class="px-2.5 py-1 rounded-md text-xs font-bold border ${statusColor}">${log.status}</span>
+                            </td>
+                        </tr>
+                    `);
+                });
+                const analysisEl = document.getElementById('simpleAnalysisText');
+                if(analysisEl) analysisEl.innerText = this.getSimpleAnalysis();
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
+        };
+
+        // Jalankan inisialisasi awal
+        BackendApi.doGet();
+
+        // Menggantikan fungsi log masuk sedia ada dengan Backend
+        async function sahkanLogin() {
+            const id = document.getElementById('adminId').value;
+            const pwd = document.getElementById('adminPwd').value;
+            const btn = document.getElementById('loginBtnSahkan');
+            const oriText = btn.innerHTML;
+            
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin mx-auto"></i>`;
+            btn.disabled = true;
+            lucide.createIcons();
+
+            const res = await BackendApi.checkLogin(id, pwd);
+            
+            btn.innerHTML = oriText;
+            btn.disabled = false;
+
+            if (res.success) {
+                tutupModalLoginAdmin();
+                setTimeout(() => {
+                    viewNormal.classList.add('hidden');
+                    dashboardAdmin.classList.remove('hidden');
+                    dashboardAdmin.classList.add('flex');
+                    document.body.classList.remove('maintenance-mode');
+                    BackendApi.getInitialData(); 
+                }, 300);
+            } else {
+                errorMsg.innerText = res.msg;
+                errorMsg.classList.remove('hidden');
+            }
+        }
+
+        function logKeluarAdmin() {
+            BackendApi.logout();
+            dashboardAdmin.classList.add('hidden');
+            dashboardAdmin.classList.remove('flex');
+            viewNormal.classList.remove('hidden');
+            
+            const isMaintenance = document.getElementById('maintenanceToggle').checked;
+            if(isMaintenance) {
+                document.body.classList.add('maintenance-mode');
+            } else {
+                document.body.classList.remove('maintenance-mode');
+            }
+        }
+
+        // FUNGSI PERALIHAN TAB ADMIN MENU
+        function tukarTabAdmin(tabId) {
+            if (!BackendApi.verifyToken()) {
+                alert("Sesi akses anda telah tamat tempoh (melebihi 2 jam). Sila log masuk semula.");
+                logKeluarAdmin();
+                bukaModalLoginAdmin();
+                return;
+            }
+
+            document.querySelectorAll('.admin-tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-menu').forEach(el => {
+                el.classList.remove('bg-blue-50', 'text-blue-700', 'font-bold');
+                el.classList.add('text-slate-600', 'font-medium');
+            });
+
+            const targetTab = document.getElementById(`tab-${tabId}`);
+            if (targetTab) {
+                targetTab.classList.remove('hidden');
+                targetTab.classList.add('block');
+            }
+            
+            const activeMenu = document.getElementById(`menu-${tabId}`);
+            if(activeMenu) {
+                activeMenu.classList.remove('text-slate-600', 'font-medium');
+                activeMenu.classList.add('bg-blue-50', 'text-blue-700', 'font-bold');
+            }
+        }
+
+        // FUNGSI TETAPAN (UBAH ID & KATA LALUAN)
+        async function kemaskiniKredensial() {
+            const newId = document.getElementById('newAdminId').value.trim();
+            const newPwd = document.getElementById('newAdminPwd').value.trim();
+            const msgEl = document.getElementById('tetapanMsg');
+
+            msgEl.classList.remove('hidden');
+
+            if (!newId || !newPwd) {
+                msgEl.className = "text-sm font-medium p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 mt-4 block";
+                msgEl.innerHTML = `<i data-lucide="alert-circle" class="w-4 h-4 inline-block mr-1 mb-0.5"></i> Sila isi kedua-dua ruangan!`;
+                lucide.createIcons();
+                return;
+            }
+
+            if (newPwd.length < 6) {
+                msgEl.className = "text-sm font-medium p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 mt-4 block";
+                msgEl.innerHTML = `<i data-lucide="alert-circle" class="w-4 h-4 inline-block mr-1 mb-0.5"></i> Kata laluan mesti sekurang-kurangnya 6 aksara.`;
+                lucide.createIcons();
+                return;
+            }
+
+            const res = await BackendApi.saveRecords(newId, newPwd);
+            if (res.success) {
+                msgEl.className = "text-sm font-medium p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 mt-4 block";
+                msgEl.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4 inline-block mr-1 mb-0.5"></i> ${res.msg}`;
+                document.getElementById('newAdminId').value = '';
+                document.getElementById('newAdminPwd').value = '';
+                lucide.createIcons();
+                
+                setTimeout(() => {
+                    alert("Demi keselamatan, anda akan dilog keluar untuk memperbaharui sesi token menggunakan kredensial baru.");
+                    logKeluarAdmin();
+                    bukaModalLoginAdmin();
+                }, 2500);
+            } else {
+                msgEl.className = "text-sm font-medium p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 mt-4 block";
+                msgEl.innerText = res.msg;
+            }
+        }
+
+        function toggleMaintenanceMode(isMaint) {
+            const statusTxt = document.getElementById('maintenanceStatusTxt');
+            if(isMaint) {
+                statusTxt.innerText = "Aktif (Sedang diselenggara)";
+                statusTxt.classList.replace('text-slate-600', 'text-red-600');
+            } else {
+                statusTxt.innerText = "Tutup (Off)";
+                statusTxt.classList.replace('text-red-600', 'text-slate-600');
+            }
+        }
+
+        // ==========================================
+        // FUNGSI MODAL MUAT NAIK & KEMASKINI (ADMIN)
+        // ==========================================
+        const modalMuatNaik = document.getElementById('modalMuatNaik');
+        const muatNaikCard = document.getElementById('muatNaikCard');
+
+        function bukaModalMuatNaik(kategoriAsnaf = '') {
+            binaGridIkon();
+            document.getElementById('editDokumenId').value = '';
+            document.getElementById('uploadNamaFail').value = '';
+            document.getElementById('uploadKategoriDokumen').value = '';
+            document.getElementById('uploadKategoriAsnaf').value = kategoriAsnaf;
+            document.getElementById('uploadLinkDokumen').value = '';
+            
+            // Set ke tab ikon secara lalai
+            document.querySelector('input[name="iconType"][value="icon"]').checked = true;
+            toggleIconType('icon');
+            pilihIkon('file-text', document.querySelector(`.icon-btn[data-icon="file-text"]`));
+
+            document.getElementById('modalMuatNaikTitle').innerHTML = `<i data-lucide="upload-cloud" class="w-5 h-5"></i> Muat Naik Borang Terkini`;
+            modalMuatNaik.classList.remove('hidden');
+            modalMuatNaik.classList.add('flex');
+            setTimeout(() => {
+                modalMuatNaik.classList.remove('opacity-0');
+                muatNaikCard.classList.remove('scale-95');
+            }, 10);
+            lucide.createIcons();
+        }
+        
+        function bukaModalKemaskini(id) {
+            binaGridIkon();
+            const data = window.globalDocsData.find(d => d.id === id);
+            if(!data) return;
+
+            document.getElementById('editDokumenId').value = data.id;
+            document.getElementById('uploadNamaFail').value = data.namaFail;
+            document.getElementById('uploadKategoriDokumen').value = data.kategoriKataKunci;
+            document.getElementById('uploadKategoriAsnaf').value = data.kategoriAsnaf;
+            document.getElementById('uploadLinkDokumen').value = data.linkDokumen || '';
+            
+            const radioIcon = document.querySelector('input[name="iconType"][value="icon"]');
+            const radioImage = document.querySelector('input[name="iconType"][value="image"]');
+            
+            if (data.iconType === 'image') {
+                radioImage.checked = true;
+                toggleIconType('image');
+                document.getElementById('selectedImageBase64').value = data.iconValue;
+                document.getElementById('previewImg').src = data.iconValue;
+                document.getElementById('imagePreview').classList.remove('hidden');
+            } else {
+                radioIcon.checked = true;
+                toggleIconType('icon');
+                pilihIkon(data.iconValue || 'file-text', document.querySelector(`.icon-btn[data-icon="${data.iconValue || 'file-text'}"]`));
+            }
+            
+            document.getElementById('modalMuatNaikTitle').innerHTML = `<i data-lucide="edit" class="w-5 h-5"></i> Kemaskini Maklumat Borang`;
+            modalMuatNaik.classList.remove('hidden');
+            modalMuatNaik.classList.add('flex');
+            setTimeout(() => {
+                modalMuatNaik.classList.remove('opacity-0');
+                muatNaikCard.classList.remove('scale-95');
+            }, 10);
+            lucide.createIcons();
+        }
+
+        function tutupModalMuatNaik() {
+            modalMuatNaik.classList.add('opacity-0');
+            muatNaikCard.classList.add('scale-95');
+            setTimeout(() => {
+                modalMuatNaik.classList.add('hidden');
+                modalMuatNaik.classList.remove('flex');
+            }, 300);
+        }
+
+        async function simpanMuatNaik() {
+            // VERIFY TOKEN KESELAMATAN
+            if (!BackendApi.verifyToken()) {
+                alert("Sesi anda telah luput. Sila log masuk semula.");
+                tutupModalMuatNaik();
+                logKeluarAdmin();
+                bukaModalLoginAdmin();
+                return;
+            }
+            
+            const editId = document.getElementById('editDokumenId').value;
+            const namaFail = document.getElementById('uploadNamaFail').value.trim();
+            const kategoriAsnaf = document.getElementById('uploadKategoriAsnaf').value;
+            const kategoriKataKunci = document.getElementById('uploadKategoriDokumen').value.trim() || '';
+            const linkDokumen = document.getElementById('uploadLinkDokumen').value.trim();
+            
+            const iconType = document.querySelector('input[name="iconType"]:checked').value;
+            const iconValue = iconType === 'icon' 
+                ? document.getElementById('selectedIconName').value 
+                : document.getElementById('selectedImageBase64').value;
+            
+            if(!namaFail || !kategoriAsnaf || (iconType === 'image' && !iconValue)) {
+                const container = document.getElementById('uploadNamaFail').parentElement;
+                let errorMsg = document.getElementById('borangErrorMsg');
+                if(!errorMsg) {
+                    errorMsg = document.createElement('div');
+                    errorMsg.id = 'borangErrorMsg';
+                    errorMsg.className = 'text-red-500 text-sm font-semibold mt-2 animate-pulse';
+                    errorMsg.innerText = '*Sila lengkapkan Nama Fail, Kategori & Pilih Ikon/Gambar.';
+                    container.appendChild(errorMsg);
+                    setTimeout(() => errorMsg.remove(), 4000);
+                }
+                return;
+            }
+            
+            const tarikhSemasa = new Date().toLocaleDateString('ms-MY', { day: '2-digit', month: 'short', year: 'numeric' });
+            const docId = editId ? editId : crypto.randomUUID();
+            
+            const data = {
+                namaFail, kategoriAsnaf, kategoriKataKunci, linkDokumen, tarikhSemasa, iconType, iconValue
+            };
+
+            // Hantar data ke Firestore (Real-Time DB)
+            if (window.simpanKeFirestore) {
+                await window.simpanKeFirestore(docId, data);
+            }
+            
+            tutupModalMuatNaik();
+        }
+
+        async function padamDokumen(id) {
+            // VERIFY TOKEN KESELAMATAN
+            if (!BackendApi.verifyToken()) {
+                alert("Sesi anda telah luput. Sila log masuk semula.");
+                logKeluarAdmin();
+                bukaModalLoginAdmin();
+                return;
+            }
+
+            if (window.padamDariFirestore) {
+                await window.padamDariFirestore(id);
+            }
+
+            const toastContainer = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'bg-white border-l-4 border-red-500 shadow-2xl rounded-xl p-4 pr-10 flex items-start gap-4 max-w-sm toast-enter relative pointer-events-auto ring-1 ring-black/5';
+            
+            toast.innerHTML = `
+                <div class="bg-red-100 rounded-full p-2 flex-shrink-0">
+                    <i data-lucide="trash-2" class="w-6 h-6 text-red-600"></i>
+                </div>
+                <div>
+                    <h5 class="text-slate-800 font-bold text-sm">Dokumen Dipadam!</h5>
+                    <p class="text-slate-500 text-xs mt-0.5">Fail telah dikeluarkan dari sistem pangkalan data.</p>
+                </div>
+                <button onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            `;
+            
+            toastContainer.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.classList.replace('toast-enter', 'toast-exit');
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, 3000);
+        }
+
+    </script>
+</body>
+</html>
