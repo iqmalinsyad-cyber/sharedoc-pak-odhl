@@ -808,6 +808,196 @@
         // Render ikon Lucide
         lucide.createIcons();
 
+        // ==========================================
+        // BACKEND SIMULASI (Kriptografi, Sesi, Kadar Had, Log)
+        // ==========================================
+        const BackendApi = {
+            async hashString(message) {
+                const msgBuffer = new TextEncoder().encode(message);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            },
+            
+            async setupHashedAuth() {
+                if (!localStorage.getItem('admin_cred_hash')) {
+                    const defaultId = 'admin';
+                    const defaultPwd = 'admin123';
+                    const salt = crypto.randomUUID();
+                    const hashedPwd = await this.hashString(defaultPwd + salt);
+                    localStorage.setItem('admin_cred_id', defaultId);
+                    localStorage.setItem('admin_cred_hash', hashedPwd);
+                    localStorage.setItem('admin_cred_salt', salt);
+                }
+                if (!localStorage.getItem('admin_logs')) {
+                    localStorage.setItem('admin_logs', JSON.stringify([]));
+                }
+            },
+            
+            logActivity(action, status) {
+                let logs = JSON.parse(localStorage.getItem('admin_logs') || '[]');
+                const date = new Date();
+                logs.unshift({
+                    time: date.toLocaleString('ms-MY') + ' ' + date.toLocaleTimeString('ms-MY'),
+                    action: action,
+                    status: status
+                });
+                if (logs.length > 50) logs.pop(); // Simpan 50 rekod terakhir
+                localStorage.setItem('admin_logs', JSON.stringify(logs));
+                this.getInitialData();
+            },
+
+            async checkLogin(id, pwd) {
+                // Rate Limiting Check
+                let attempts = parseInt(localStorage.getItem('login_attempts') || '0');
+                let lockTime = parseInt(localStorage.getItem('login_lockout') || '0');
+                const now = Date.now();
+
+                if (lockTime > now) {
+                    const waitMin = Math.ceil((lockTime - now) / 60000);
+                    this.logActivity(`Cubaan Log masuk (${id})`, 'Gagal (Dikunci)');
+                    return { success: false, msg: `Akaun dikunci. Sila cuba lagi selepas ${waitMin} minit.` };
+                }
+
+                const storedId = localStorage.getItem('admin_cred_id');
+                const storedHash = localStorage.getItem('admin_cred_hash');
+                const salt = localStorage.getItem('admin_cred_salt');
+
+                if (id === storedId) {
+                    const hashedAttempt = await this.hashString(pwd + salt);
+                    if (hashedAttempt === storedHash) {
+                        // Reset attempts
+                        localStorage.setItem('login_attempts', '0');
+                        localStorage.setItem('login_lockout', '0');
+                        
+                        // Set Session Token (2 Jam)
+                        const token = crypto.randomUUID();
+                        const expiry = now + (2 * 60 * 60 * 1000); // 2 jam
+                        localStorage.setItem('admin_session_token', token);
+                        localStorage.setItem('admin_session_expiry', expiry.toString());
+                        
+                        this.logActivity('Log Masuk Sistem', 'Berjaya');
+                        return { success: true, msg: "Berjaya log masuk." };
+                    }
+                }
+
+                // Gagal Login
+                attempts++;
+                localStorage.setItem('login_attempts', attempts.toString());
+                if (attempts >= 5) {
+                    localStorage.setItem('login_lockout', (now + (15 * 60 * 1000)).toString()); // Kunci 15 minit
+                    this.logActivity(`Cubaan Log masuk (${id})`, 'Gagal (Kunci 15 minit)');
+                    return { success: false, msg: "Terlalu banyak percubaan gagal. Akaun dikunci 15 minit." };
+                }
+
+                this.logActivity(`Cubaan Log masuk (${id})`, `Gagal (Percubaan ${attempts}/5)`);
+                return { success: false, msg: `ID atau Kata Laluan tidak sah. Baki percubaan: ${5 - attempts}` };
+            },
+
+            verifyToken() {
+                const token = localStorage.getItem('admin_session_token');
+                const expiry = parseInt(localStorage.getItem('admin_session_expiry') || '0');
+                const now = Date.now();
+                if (token && expiry > now) {
+                    return true;
+                }
+                return false;
+            },
+
+            logout() {
+                if (this.verifyToken()) {
+                    this.logActivity('Log Keluar Sistem', 'Berjaya');
+                }
+                localStorage.removeItem('admin_session_token');
+                localStorage.removeItem('admin_session_expiry');
+            },
+
+            async saveRecords(newId, newPwd) {
+                if (!this.verifyToken()) return { success: false, msg: "Sesi telah tamat. Sila log masuk semula." };
+                
+                try {
+                    const salt = crypto.randomUUID();
+                    const hashedPwd = await this.hashString(newPwd + salt);
+                    localStorage.setItem('admin_cred_id', newId);
+                    localStorage.setItem('admin_cred_hash', hashedPwd);
+                    localStorage.setItem('admin_cred_salt', salt);
+                    
+                    this.logActivity('Kemaskini Kredensial', 'Berjaya');
+                    return { success: true, msg: "Kredensial berjaya dikemas kini secara selamat." };
+                } catch (e) {
+                    this.logActivity('Kemaskini Kredensial', 'Gagal (Ralat Sistem)');
+                    return { success: false, msg: "Ralat teknikal semasa merekod. Sila cuba lagi." };
+                }
+            },
+
+            getInitialData() {
+                const tbody = document.getElementById('logTableBody');
+                if (!tbody) return;
+                const logs = JSON.parse(localStorage.getItem('admin_logs') || '[]');
+                tbody.innerHTML = '';
+                
+                if (logs.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="3" class="px-4 py-8 text-center text-slate-500 font-medium">Tiada rekod aktiviti setakat ini.</td></tr>`;
+                    return;
+                }
+
+                logs.forEach(log => {
+                    let statusColor = log.status.includes('Berjaya') ? 'text-emerald-600 bg-emerald-50' : 'text-red-600 bg-red-50';
+                    if(log.status.includes('Kunci')) statusColor = 'text-orange-600 bg-orange-50';
+                    
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-50 border-b border-slate-100 last:border-0 transition-colors">
+                            <td class="px-4 py-3 text-slate-500 font-medium text-xs whitespace-nowrap">${log.time}</td>
+                            <td class="px-4 py-3 font-semibold text-slate-800">${log.action}</td>
+                            <td class="px-4 py-3">
+                                <span class="px-2.5 py-1 rounded-md text-[11px] font-bold border border-current ${statusColor}">${log.status}</span>
+                            </td>
+                        </tr>
+                    `;
+                });
+            },
+
+            getSimpleAnalysis() {
+                const textEl = document.getElementById('simpleAnalysisText');
+                if(!textEl) return;
+                const logs = JSON.parse(localStorage.getItem('admin_logs') || '[]');
+                const gagalCount = logs.filter(l => l.status.includes('Gagal')).length;
+                if(gagalCount > 5) {
+                    textEl.innerHTML = `<i data-lucide="alert-triangle" class="w-4 h-4 text-orange-500 inline"></i> Amaran: Kerap berlaku log masuk gagal!`;
+                    textEl.className = "text-orange-600 font-bold flex items-center gap-1";
+                } else {
+                    textEl.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4 text-emerald-500 inline"></i> Analisa: Tiada aktiviti mencurigakan.`;
+                    textEl.className = "text-emerald-600 font-bold flex items-center gap-1";
+                }
+                lucide.createIcons();
+            },
+
+            healthCheck() {
+                const healthEl = document.getElementById('healthCheckStatus');
+                if(!healthEl) return;
+                if (window.crypto && window.crypto.subtle) {
+                    healthEl.innerHTML = `<i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i> Kriptografi SHA-256 Aktif`;
+                    healthEl.classList.replace('text-slate-500', 'text-emerald-700');
+                } else {
+                    healthEl.innerHTML = `<i data-lucide="shield-alert" class="w-4 h-4 text-red-500"></i> Amaran: Pelayar web tidak menyokong enkripsi.`;
+                    healthEl.classList.replace('text-slate-500', 'text-red-700');
+                }
+                lucide.createIcons();
+            },
+            
+            doGet() {
+                return { status: 200, message: 'Fungsi backend selamat dan stabil.' };
+            }
+        };
+
+        // Panggil pemeriksaan ini sebaik sahaja DOM (web) siap dimuatkan
+        document.addEventListener('DOMContentLoaded', () => {
+            BackendApi.setupHashedAuth();
+            BackendApi.getInitialData();
+            binaGridIkon();
+            checkMaintenanceStatusOnLoad();
+        });
+
         // 100+ Ikon Zakat / Pengurusan
         const senaraiIkon = ['wallet', 'graduation-cap', 'badge-plus', 'receipt', 'activity', 'store', 'clipboard-list', 'file-text', 'home', 'heart', 'users', 'user', 'briefcase', 'building', 'car', 'book', 'book-open', 'gift', 'hand-coins', 'landmark', 'laptop', 'monitor', 'shopping-cart', 'truck', 'utensils', 'zap', 'shield', 'award', 'banknote', 'coins', 'credit-card', 'piggy-bank', 'scale', 'gavel', 'stethoscope', 'pill', 'syringe', 'wheelchair', 'baby', 'shirt', 'droplet', 'flame', 'wind', 'sun', 'moon', 'cloud', 'umbrella', 'anchor', 'plane', 'bus', 'train', 'bike', 'tractor', 'wheat', 'leaf', 'tree', 'flower', 'apple', 'bone', 'fish', 'coffee', 'cup-soda', 'glass-water', 'bed', 'sofa', 'tv', 'radio', 'smartphone', 'camera', 'headphones', 'mic', 'music', 'video', 'film', 'ticket', 'map', 'compass', 'navigation', 'globe', 'flag', 'mail', 'inbox', 'package', 'archive', 'folder', 'printer', 'paperclip', 'scissors', 'hammer', 'wrench', 'screwdriver', 'pen-tool', 'brush', 'palette', 'key', 'lock', 'unlock', 'bell', 'megaphone', 'search', 'settings', 'cog', 'slider', 'filter', 'sort-asc', 'sort-desc', 'list', 'grid', 'check', 'x', 'alert-circle', 'alert-triangle', 'info', 'help-circle'];
 
@@ -921,81 +1111,151 @@
                         <td class="px-6 py-4 font-semibold text-slate-800 flex items-center gap-3">
                             ${iconDisplayAdmin} ${data.namaFail}
                         </td>
-                        <td class="px-6 py-4"><span class="${warna.bg} ${warna.text} px-2.5 py-1 rounded-md text-xs font-bold">${data.kategoriAsnaf}</span></td>
-                        <td class="px-6 py-4 text-slate-500">${data.tarikhSemasa}</td>
+                        <td class="px-6 py-4"><span class="${warna.bg} ${warna.text} px-2.5 py-1 rounded-md text-xs font-bold border border-current opacity-70">${data.kategoriAsnaf}</span></td>
+                        <td class="px-6 py-4 text-slate-500 text-xs font-medium">${data.tarikhSemasa}</td>
                         <td class="px-6 py-4 text-right space-x-2">
-                            <button onclick="bukaModalKemaskini('${data.id}')" class="text-blue-600 hover:text-blue-800 bg-blue-50 p-2 rounded-md transition-colors" title="Kemaskini Fail"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button>
+                            <button onclick="bukaModalKemaskini('${data.id}')" class="text-blue-600 hover:text-blue-800 bg-blue-50 p-2 rounded-md transition-colors" title="Kemaskini Fail"><i data-lucide="edit" class="w-4 h-4"></i></button>
                             <button onclick="padamDokumen('${data.id}')" class="text-red-600 hover:text-red-800 bg-red-50 p-2 rounded-md transition-colors" title="Padam"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                         </td>
                     </tr>
                 `;
-                
-                if (data.kategoriAsnaf === 'Fakir/Miskin' && adminTableFakir) {
-                    adminTableFakir.insertAdjacentHTML('beforeend', adminRowHTML);
-                } else if (data.kategoriAsnaf === 'Muallaf' && adminTableMuallaf) {
-                    adminTableMuallaf.insertAdjacentHTML('beforeend', adminRowHTML);
-                } else if (data.kategoriAsnaf === 'Gharimin' && adminTableGharimin) {
-                    adminTableGharimin.insertAdjacentHTML('beforeend', adminRowHTML);
-                } else if (data.kategoriAsnaf === 'Amil Kariah' && adminTableAmil) {
-                    adminTableAmil.insertAdjacentHTML('beforeend', adminRowHTML);
-                } else if (adminTableFakir) {
-                    // Fallback jika kategori lain
-                    adminTableFakir.insertAdjacentHTML('beforeend', adminRowHTML);
-                }
 
+                // Tambah ke dalam jadual admin mengikut kategori
+                if (data.kategoriAsnaf === 'Fakir/Miskin' && adminTableFakir) adminTableFakir.innerHTML += adminRowHTML;
+                else if (data.kategoriAsnaf === 'Muallaf' && adminTableMuallaf) adminTableMuallaf.innerHTML += adminRowHTML;
+                else if (data.kategoriAsnaf === 'Gharimin' && adminTableGharimin) adminTableGharimin.innerHTML += adminRowHTML;
+                else if (data.kategoriAsnaf === 'Amil Kariah' && adminTableAmil) adminTableAmil.innerHTML += adminRowHTML;
+
+                // Tambah ke paparan Pengguna (Lalai disembunyikan sehingga dicari)
                 const userCardHTML = `
-                    <div id="user-card-${data.id}" class="bg-white rounded-2xl p-6 border-2 border-slate-100 shadow-sm hover:shadow-xl transition-all flex flex-col h-full borang-card" style="display: none;" data-kategori="${data.kategoriAsnaf}" data-tajuk="${data.namaFail}" data-tag="${data.kategoriKataKunci}">
+                    <div id="user-card-${data.id}" class="bg-white rounded-2xl p-6 border-2 border-slate-100 shadow-sm hover:shadow-xl transition-all flex flex-col h-full borang-card" data-kategori="${data.kategoriAsnaf}" data-tajuk="${safeNama}" data-tag="${safeKataKunci}" style="display: none;">
                         <div class="flex items-start justify-between mb-4">
-                            <div class="${warna.iconBg} p-3 rounded-xl flex items-center justify-center">
+                            <div class="${warna.iconBg} p-4 rounded-xl">
                                 ${iconDisplayUser}
                             </div>
-                            <span class="${warna.bg} ${warna.text} text-xs font-bold px-3 py-1 rounded-full border border-current opacity-60">${data.kategoriAsnaf}</span>
+                            <span class="${warna.bg} ${warna.text} text-xs font-bold px-3 py-1 rounded-full border border-current opacity-70">${data.kategoriAsnaf}</span>
                         </div>
                         <h4 class="text-xl font-bold text-slate-800 mb-2">${data.namaFail}</h4>
-                        <p class="text-slate-500 text-sm mb-4 flex-grow">Kata Kunci: ${data.kategoriKataKunci || 'Tiada maklumat'}</p>
+                        <p class="text-slate-500 text-sm mb-4 flex-grow">Muat turun dokumen ${data.namaFail} untuk rujukan dan permohonan asnaf.</p>
                         <div class="text-xs text-slate-400 mb-4 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> Kemaskini: ${data.tarikhSemasa}</div>
-                        <button onclick="muatTurun('${safeNama}', '${safeLink}')" class="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 pointer-events-auto">
+                        <button onclick="muatTurun('${safeNama}')" class="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 pointer-events-auto">
                             <i data-lucide="download" class="w-5 h-5"></i> Muat Turun
                         </button>
                     </div>
                 `;
-                gridHasil.insertAdjacentHTML('beforeend', userCardHTML);
+                if(gridHasil) gridHasil.innerHTML += userCardHTML;
             });
             
             lucide.createIcons();
             
-            // Refresh carian jika sedang dibuka
-            if(document.getElementById('hasilCarianSection').classList.contains('fade-in')) {
-                prosesCarian();
+            // Semak semula penapis carian semasa
+            if(typeof prosesCarian === 'function') {
+                const sInput = document.getElementById('searchInput');
+                if(sInput && sInput.value.trim().length > 0) {
+                    prosesCarian();
+                }
             }
-        };
+        }
 
-        // ==========================================
-        // FUNGSI PERALIHAN TAB ADMIN MENU
-        function tukarTabAdmin(tabId) {
-            if (!BackendApi.verifyToken()) {
-                alert("Sesi akses anda telah tamat tempoh (melebihi 2 jam). Sila log masuk semula.");
-                logKeluarAdmin();
-                bukaModalLoginAdmin();
-                return;
-            }
-
+        // Fungsi Tukar Tab Papan Pemuka Admin
+        window.tukarTabAdmin = function(tabId) {
             document.querySelectorAll('.admin-tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-menu').forEach(el => {
-                el.classList.remove('bg-blue-50', 'text-blue-700', 'font-bold');
-                el.classList.add('text-slate-600', 'font-medium');
+                el.classList.remove('bg-blue-50', 'text-blue-700');
+                el.classList.add('text-slate-600');
             });
+            
+            const selectedTab = document.getElementById('tab-' + tabId);
+            const selectedMenu = document.getElementById('menu-' + tabId);
+            
+            if(selectedTab) {
+                selectedTab.classList.remove('hidden');
+                selectedTab.classList.add('block');
+            }
+            if(selectedMenu) {
+                selectedMenu.classList.remove('text-slate-600');
+                selectedMenu.classList.add('bg-blue-50', 'text-blue-700');
+            }
+        }
 
-            const targetTab = document.getElementById(`tab-${tabId}`);
-            if (targetTab) {
-                targetTab.classList.remove('hidden');
-                targetTab.classList.add('block');
+        // FUNGSI ADMIN (DIPERBAIKI)
+        // ==========================================
+        const modalAdmin = document.getElementById('modalLoginAdmin');
+        const loginCard = document.getElementById('loginCard');
+        const dashboardAdmin = document.getElementById('adminDashboard');
+        const viewNormal = document.getElementById('normalView');
+        const errorMsg = document.getElementById('loginErrorMsg');
+
+        function bukaModalLoginAdmin() {
+            modalAdmin.classList.remove('hidden');
+            modalAdmin.classList.add('flex');
+            setTimeout(() => {
+                modalAdmin.classList.remove('opacity-0');
+                loginCard.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function tutupModalLoginAdmin() {
+            modalAdmin.classList.add('opacity-0');
+            loginCard.classList.add('scale-95');
+            setTimeout(() => {
+                modalAdmin.classList.add('hidden');
+                modalAdmin.classList.remove('flex');
+                errorMsg.classList.add('hidden');
+                document.getElementById('adminId').value = '';
+                document.getElementById('adminPwd').value = '';
+            }, 300);
+        }
+
+        async function sahkanLogin() {
+            const id = document.getElementById('adminId').value.trim();
+            const pwd = document.getElementById('adminPwd').value.trim();
+            const btn = document.getElementById('loginBtnSahkan');
+            
+            // Papar loading
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-6 h-6 animate-spin mx-auto text-white"></i>`;
+            lucide.createIcons();
+
+            // Panggil API Backend
+            const res = await BackendApi.checkLogin(id, pwd);
+            
+            if (res.success) {
+                tutupModalLoginAdmin();
+                setTimeout(() => {
+                    viewNormal.classList.add('hidden');
+                    dashboardAdmin.classList.remove('hidden');
+                    dashboardAdmin.classList.add('flex');
+                    document.body.classList.remove('maintenance-mode'); // Jamin terlepas skrin penyelenggaraan
+                    
+                    // Segarkan Data Papan Pemuka Log
+                    BackendApi.getInitialData();
+                    BackendApi.getSimpleAnalysis();
+                    BackendApi.healthCheck();
+                }, 300);
+            } else {
+                errorMsg.classList.remove('hidden');
+                errorMsg.innerText = res.msg;
             }
             
-            const activeMenu = document.getElementById(`menu-${tabId}`);
-            if(activeMenu) {
-                activeMenu.classList.remove('text-slate-600', 'font-medium');
-                activeMenu.classList.add('bg-blue-50', 'text-blue-700', 'font-bold');
+            // Pulihkan teks butang
+            btn.innerHTML = originalText;
+        }
+
+        function logKeluarAdmin() {
+            // Tamatkan Sesi Serta Merta
+            BackendApi.logout();
+            
+            dashboardAdmin.classList.add('hidden');
+            dashboardAdmin.classList.remove('flex');
+            viewNormal.classList.remove('hidden');
+            
+            // Semak jika mod maintenance aktif sebelum log keluar
+            const isMaintenance = document.getElementById('maintenanceToggle').checked;
+            if(isMaintenance) {
+                document.body.classList.add('maintenance-mode');
+            } else {
+                document.body.classList.remove('maintenance-mode');
             }
         }
 
