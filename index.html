@@ -286,6 +286,13 @@
                         <h1 class="font-bold text-lg md:text-xl">Panel Pentadbir Portal</h1>
                     </div>
                     <div class="flex items-center gap-4">
+                        <div id="dbConnectionStatus" class="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800/50 text-xs font-semibold text-slate-300 border border-slate-700">
+                            <span class="relative flex h-2 w-2">
+                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                              <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                            </span>
+                            Luar Talian (Local)
+                        </div>
                         <span class="text-sm text-blue-200 hidden md:block">Admin Sistem</span>
                         <button onclick="logKeluarAdmin()" class="bg-red-500/20 hover:bg-red-500/40 text-red-200 hover:text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
                             <i data-lucide="log-out" class="w-4 h-4"></i> Keluar
@@ -628,11 +635,46 @@
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // ========================================================================
+        // 🔴 MASUKKAN MAKLUMAT FIREBASE ANDA DI SINI UNTUK FUNGSI SYNC REAL-TIME 
+        // Buka Firebase Console > Project Settings > Web App > Copy Config
+        // (Selamat diletakkan di sini jika Security Rules Firebase dikonfigurasi)
+        // ========================================================================
+        const myFirebaseConfig = {
+            // BUANG TANDA '//' DAN MASUKKAN MAKLUMAT ANDA:
+            // apiKey: "AIzaSyAcSw-hfF-w_hRH4El-LQ2rLocvR-SVN7A",
+            // authDomain: "docuvault-system.firebaseapp.com",
+            // projectId: "docuvault-system",
+            // storageBucket: "docuvault-system.firebasestorage.app",
+            // messagingSenderId: "390300207503",
+            // appId: "1:390300207503:web:5907d46c3cd941ee4e23fa"
+        };
+
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'zakat-amil-portal';
-        let firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        let firebaseConfig = (typeof __firebase_config !== 'undefined' && Object.keys(JSON.parse(__firebase_config)).length > 0) 
+                              ? JSON.parse(__firebase_config) 
+                              : myFirebaseConfig;
         
         let app, db, auth;
         window.useLocalFallback = false;
+
+        // FUNGSI KEMASKINI UI STATUS PANGKALAN DATA (Admin Sahaja)
+        function kemaskiniStatusUI(isOnline) {
+            const statusEl = document.getElementById('dbConnectionStatus');
+            if(!statusEl) return;
+            if(isOnline) {
+                statusEl.innerHTML = `
+                    <span class="relative flex h-2 w-2">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    Talian Awan (Real-Time)
+                `;
+                statusEl.classList.replace('bg-slate-800/50', 'bg-emerald-900/50');
+                statusEl.classList.replace('text-slate-300', 'text-emerald-300');
+                statusEl.classList.replace('border-slate-700', 'border-emerald-700');
+            }
+        }
 
         // FUNGSI INIT ASYNC: Memuatkan API Key dari fail luaran dengan selamat (Tanpa Hardcode dalam HTML)
         async function mulakanSistemFirebase() {
@@ -723,6 +765,7 @@
                         seedDefaultData();
                     } else if (window.renderData) {
                         window.renderData(docsData);
+                        kemaskiniStatusUI(true); // Firebase berjaya & aktif (Real-time hidup)
                     }
                 }, (error) => {
                     // JIKA GAGAL/RALAT PERMISSION, TUKAR KE LOCAL STORAGE TANPA CONSOLE.ERROR
@@ -1342,17 +1385,6 @@
             } else {
                 msgEl.className = "text-sm font-medium p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 mt-4 block";
                 msgEl.innerText = res.msg;
-            }
-        }
-
-        function toggleMaintenanceMode(isMaint) {
-            const statusTxt = document.getElementById('maintenanceStatusTxt');
-            if(isMaint) {
-                statusTxt.innerText = "Aktif (Sedang diselenggara)";
-                statusTxt.classList.replace('text-slate-600', 'text-red-600');
-            } else {
-                statusTxt.innerText = "Tutup (Off)";
-                statusTxt.classList.replace('text-red-600', 'text-slate-600');
             }
         }
 
