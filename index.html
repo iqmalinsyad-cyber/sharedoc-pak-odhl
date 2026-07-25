@@ -640,7 +640,7 @@
         // Buka Firebase Console > Project Settings > Web App > Copy Config
         // (Selamat diletakkan di sini jika Security Rules Firebase dikonfigurasi)
         // ========================================================================
-        const myFirebaseConfig = {
+        const myFirebaseConfig = { 
             apiKey: "AIzaSyAcSw-hfF-w_hRH4El-LQ2rLocvR-SVN7A",
             authDomain: "docuvault-system.firebaseapp.com",
             projectId: "docuvault-system",
@@ -1180,7 +1180,7 @@
                         <h4 class="text-xl font-bold text-slate-800 mb-2">${data.namaFail}</h4>
                         <p class="text-slate-500 text-sm mb-4 flex-grow">Muat turun dokumen ${data.namaFail} untuk rujukan dan permohonan asnaf.</p>
                         <div class="text-xs text-slate-400 mb-4 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> Kemaskini: ${data.tarikhSemasa}</div>
-                        <button onclick="muatTurun('${safeNama}')" class="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 pointer-events-auto">
+                        <button onclick="muatTurun('${safeNama}', '${safeLink}')" class="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 pointer-events-auto">
                             <i data-lucide="download" class="w-5 h-5"></i> Muat Turun
                         </button>
                     </div>
@@ -1543,6 +1543,134 @@
             
             toastContainer.appendChild(toast);
             lucide.createIcons();
+
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.classList.replace('toast-enter', 'toast-exit');
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, 3000);
+        }
+
+        // ==========================================
+        // FUNGSI PENGGUNA (CARIAN & MUAT TURUN)
+        // ==========================================
+        function prosesCarian() {
+            const searchInput = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('clearBtn');
+            const hasilSection = document.getElementById('hasilCarianSection');
+            const heroText = document.getElementById('heroText');
+            const searchContainer = document.getElementById('searchContainer');
+            const gridHasil = document.getElementById('gridHasil');
+            const noResult = document.getElementById('noResult');
+            const jumlahHasil = document.getElementById('jumlahHasil');
+            const kataKunciPapar = document.getElementById('kataKunciPapar');
+            
+            const input = searchInput ? searchInput.value.trim().toLowerCase() : '';
+            // DAPATKAN KAD SECARA DINAMIK SETIAP KALI CARIAN DIBUAT
+            const semuaKad = document.querySelectorAll('.borang-card');
+            
+            if (input.length > 0) {
+                if(clearBtn) clearBtn.classList.remove('hidden');
+                
+                if(heroText) {
+                    heroText.style.opacity = '0';
+                    heroText.style.height = '0';
+                    heroText.style.margin = '0';
+                    heroText.style.overflow = 'hidden';
+                }
+                if(searchContainer) searchContainer.classList.add('max-w-2xl', 'mx-auto');
+                
+                if(hasilSection) {
+                    hasilSection.classList.remove('hidden');
+                    hasilSection.classList.add('fade-in');
+                }
+                
+                let jumlahBerjaya = 0;
+                semuaKad.forEach(kad => {
+                    const tajuk = (kad.dataset.tajuk || '').toLowerCase();
+                    const tag = (kad.dataset.tag || '').toLowerCase();
+                    const kategori = (kad.dataset.kategori || '').toLowerCase();
+                    
+                    if (tajuk.includes(input) || tag.includes(input) || kategori.includes(input)) {
+                        kad.style.display = 'flex';
+                        kad.classList.add('slide-up');
+                        jumlahBerjaya++;
+                    } else {
+                        kad.style.display = 'none';
+                        kad.classList.remove('slide-up');
+                    }
+                });
+
+                if(jumlahHasil) jumlahHasil.innerText = `${jumlahBerjaya} Dijumpai`;
+                
+                if (jumlahBerjaya === 0) {
+                    if(gridHasil) gridHasil.classList.add('hidden');
+                    if(noResult) noResult.classList.remove('hidden');
+                    if(kataKunciPapar) kataKunciPapar.innerText = searchInput.value;
+                } else {
+                    if(gridHasil) gridHasil.classList.remove('hidden');
+                    if(noResult) noResult.classList.add('hidden');
+                }
+            } else {
+                kosongkanCarian();
+            }
+        }
+
+        function kosongkanCarian() {
+            const searchInput = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('clearBtn');
+            const hasilSection = document.getElementById('hasilCarianSection');
+            const heroText = document.getElementById('heroText');
+            const searchContainer = document.getElementById('searchContainer');
+            
+            if(searchInput) searchInput.value = '';
+            if(clearBtn) clearBtn.classList.add('hidden');
+            
+            if(heroText) {
+                heroText.style.opacity = '1';
+                heroText.style.height = 'auto';
+                heroText.style.marginTop = '';
+                heroText.style.marginBottom = '';
+            }
+            if(searchContainer) searchContainer.classList.remove('max-w-2xl', 'mx-auto');
+            
+            if(hasilSection) {
+                hasilSection.classList.add('hidden');
+                hasilSection.classList.remove('fade-in');
+            }
+            
+            const semuaKad = document.querySelectorAll('.borang-card');
+            semuaKad.forEach(kad => kad.style.display = 'none');
+        }
+
+        function muatTurun(namaBorang, linkDokumen = '') {
+            // Jika ada pautan (link), buka pautan tersebut di tab baru
+            if (linkDokumen && linkDokumen.trim() !== '') {
+                window.open(linkDokumen, '_blank');
+            }
+
+            const toastContainer = document.getElementById('toast-container');
+            if(!toastContainer) return;
+            
+            const toast = document.createElement('div');
+            toast.className = 'bg-white border-l-4 border-blue-600 shadow-2xl rounded-xl p-4 pr-10 flex items-start gap-4 max-w-sm toast-enter relative pointer-events-auto ring-1 ring-black/5 mb-3';
+            
+            toast.innerHTML = `
+                <div class="bg-blue-100 rounded-full p-2 flex-shrink-0">
+                    <i data-lucide="check-circle-2" class="w-6 h-6 text-blue-700"></i>
+                </div>
+                <div>
+                    <h5 class="text-slate-800 font-bold text-sm">Tindakan Berjaya</h5>
+                    <p class="text-slate-500 text-xs mt-0.5">${linkDokumen ? 'Membuka dokumen' : 'Memuat turun fail'} ${namaBorang}</p>
+                </div>
+                <button onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            `;
+            
+            toastContainer.appendChild(toast);
+            if(window.lucide) lucide.createIcons();
 
             setTimeout(() => {
                 if (toast.parentElement) {
