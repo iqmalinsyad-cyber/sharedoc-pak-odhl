@@ -971,344 +971,6 @@
         };
 
         // ==========================================
-        // FUNGSI PENGGUNA (CARIAN)
-        // ==========================================
-        const searchInput = document.getElementById('searchInput');
-        const clearBtn = document.getElementById('clearBtn');
-        const hasilSection = document.getElementById('hasilCarianSection');
-        const heroText = document.getElementById('heroText');
-        const searchContainer = document.getElementById('searchContainer');
-        const gridHasil = document.getElementById('gridHasil');
-        const noResult = document.getElementById('noResult');
-        const jumlahHasil = document.getElementById('jumlahHasil');
-        const kataKunciPapar = document.getElementById('kataKunciPapar');
-
-        function prosesCarian() {
-            const input = searchInput.value.trim().toLowerCase();
-            const semuaKadDin = document.querySelectorAll('.borang-card');
-            
-            if (input.length > 0) {
-                clearBtn.classList.remove('hidden');
-                heroText.style.opacity = '0';
-                heroText.style.height = '0';
-                heroText.style.margin = '0';
-                heroText.style.overflow = 'hidden';
-                searchContainer.classList.add('max-w-2xl', 'mx-auto');
-                
-                hasilSection.classList.remove('hidden');
-                hasilSection.classList.add('fade-in');
-                
-                let jumlahBerjaya = 0;
-                semuaKadDin.forEach(kad => {
-                    const tajuk = kad.dataset.tajuk.toLowerCase();
-                    const tag = kad.dataset.tag.toLowerCase();
-                    const kategori = kad.dataset.kategori.toLowerCase();
-                    
-                    if (tajuk.includes(input) || tag.includes(input) || kategori.includes(input)) {
-                        kad.style.display = 'flex';
-                        kad.classList.add('slide-up');
-                        jumlahBerjaya++;
-                    } else {
-                        kad.style.display = 'none';
-                        kad.classList.remove('slide-up');
-                    }
-                });
-
-                jumlahHasil.innerText = `${jumlahBerjaya} Dijumpai`;
-                if (jumlahBerjaya === 0) {
-                    gridHasil.classList.add('hidden');
-                    noResult.classList.remove('hidden');
-                    kataKunciPapar.innerText = searchInput.value;
-                } else {
-                    gridHasil.classList.remove('hidden');
-                    noResult.classList.add('hidden');
-                }
-            } else {
-                kosongkanCarian();
-            }
-        }
-
-        function kosongkanCarian() {
-            searchInput.value = '';
-            clearBtn.classList.add('hidden');
-            heroText.style.opacity = '1';
-            heroText.style.height = 'auto';
-            heroText.style.marginTop = '';
-            heroText.style.marginBottom = '';
-            searchContainer.classList.remove('max-w-2xl', 'mx-auto');
-            
-            hasilSection.classList.add('hidden');
-            hasilSection.classList.remove('fade-in');
-            document.querySelectorAll('.borang-card').forEach(kad => kad.style.display = 'none');
-        }
-
-        function muatTurun(namaBorang, pautanLink) {
-            if (pautanLink && pautanLink.trim() !== '') {
-                window.open(pautanLink, '_blank');
-            }
-            
-            const toastContainer = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = 'bg-white border-l-4 border-blue-600 shadow-2xl rounded-xl p-4 pr-10 flex items-start gap-4 max-w-sm toast-enter relative pointer-events-auto ring-1 ring-black/5';
-            
-            toast.innerHTML = `
-                <div class="bg-blue-100 rounded-full p-2 flex-shrink-0">
-                    <i data-lucide="check-circle-2" class="w-6 h-6 text-blue-700"></i>
-                </div>
-                <div>
-                    <h5 class="text-slate-800 font-bold text-sm">Berjaya!</h5>
-                    <p class="text-slate-500 text-xs mt-0.5">${namaBorang} sedang diproses.</p>
-                </div>
-                <button onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-slate-400 hover:text-slate-600">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                </button>
-            `;
-            
-            toastContainer.appendChild(toast);
-            lucide.createIcons();
-
-            setTimeout(() => {
-                if (toast.parentElement) {
-                    toast.classList.replace('toast-enter', 'toast-exit');
-                    setTimeout(() => toast.remove(), 300);
-                }
-            }, 3000);
-        }
-
-        // ==========================================
-        // FUNGSI ADMIN
-        // ==========================================
-        const modalAdmin = document.getElementById('modalLoginAdmin');
-        const loginCard = document.getElementById('loginCard');
-        const dashboardAdmin = document.getElementById('adminDashboard');
-        const viewNormal = document.getElementById('normalView');
-        const errorMsg = document.getElementById('loginErrorMsg');
-
-        function bukaModalLoginAdmin() {
-            modalAdmin.classList.remove('hidden');
-            modalAdmin.classList.add('flex');
-            setTimeout(() => {
-                modalAdmin.classList.remove('opacity-0');
-                loginCard.classList.remove('scale-95');
-            }, 10);
-        }
-
-        function tutupModalLoginAdmin() {
-            modalAdmin.classList.add('opacity-0');
-            loginCard.classList.add('scale-95');
-            setTimeout(() => {
-                modalAdmin.classList.add('hidden');
-                modalAdmin.classList.remove('flex');
-                errorMsg.classList.add('hidden');
-                document.getElementById('adminId').value = '';
-                document.getElementById('adminPwd').value = '';
-            }, 300);
-        }
-
-        // ==========================================
-        // SISTEM BACKEND & KESELAMATAN (SHA-256, Token, Rate Limit)
-        // Dicipta seperti yang diwajibkan oleh arahan
-        // ==========================================
-        const BackendApi = {
-            salt: "zakat_amil_secure_2026",
-            tokenName: "amil_admin_token",
-            
-            async sha256(message) {
-                const msgBuffer = new TextEncoder().encode(message + this.salt);
-                const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-                const hashArray = Array.from(new Uint8Array(hashBuffer));
-                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-            },
-
-            // 1. doGet: Inisialisasi awal sistem
-            async doGet() {
-                this.setupHashedAuth();
-                this.healthCheck();
-                this.getInitialData();
-            },
-
-            // 2. setupHashedAuth: Tetapkan kredensial selamat tanpa hardcode plain text
-            async setupHashedAuth() {
-                if (!localStorage.getItem('admin_hash_id')) {
-                    // Kredensial lalai (Mula): admin / admin123
-                    localStorage.setItem('admin_hash_id', await this.sha256('admin'));
-                    localStorage.setItem('admin_hash_pwd', await this.sha256('admin123'));
-                }
-            },
-
-            // 3. checkLogin: Verifikasi dengan Rate Limit & Session Token (2 Jam)
-            async checkLogin(id, pwd) {
-                let attempts = parseInt(localStorage.getItem('login_attempts') || '0');
-                let lockTime = parseInt(localStorage.getItem('login_lock_time') || '0');
-                const now = new Date().getTime();
-
-                // Check Rate Limit (Lock 15 Mins)
-                if (lockTime > now) {
-                    const timeLeft = Math.ceil((lockTime - now) / 60000);
-                    this.logAccess("Cubaan Log Masuk (Disekat)", "Gagal (Kunci 15 Minit)");
-                    return { success: false, msg: `Akaun dikunci akibat amaran keselamatan. Sila cuba lagi selepas ${timeLeft} minit.` };
-                }
-
-                const hashedIdInput = await this.sha256(id);
-                const hashedPwdInput = await this.sha256(pwd);
-                const storedId = localStorage.getItem('admin_hash_id');
-                const storedPwd = localStorage.getItem('admin_hash_pwd');
-
-                if (hashedIdInput === storedId && hashedPwdInput === storedPwd) {
-                    localStorage.setItem('login_attempts', '0');
-                    const token = await this.sha256(now.toString() + Math.random().toString());
-                    const expiry = now + (2 * 60 * 60 * 1000); // Expiry 2 Jam
-                    sessionStorage.setItem(this.tokenName, JSON.stringify({ token, expiry }));
-                    this.logAccess("Log Masuk Sistem", "Berjaya (Token Dijana)");
-                    return { success: true };
-                } else {
-                    attempts++;
-                    localStorage.setItem('login_attempts', attempts.toString());
-                    if (attempts >= 5) {
-                        localStorage.setItem('login_lock_time', (now + (15 * 60 * 1000)).toString());
-                        this.logAccess("Cubaan Log Masuk Dicabuli (>5 Kali)", "Dikunci 15 Minit");
-                        return { success: false, msg: "Akaun dikunci selama 15 minit akibat 5 kegagalan berturut-turut." };
-                    }
-                    this.logAccess("Cubaan Log Masuk", "Gagal (Kredensial Tidak Sah)");
-                    return { success: false, msg: `ID atau Kata Laluan tidak sah. (Baki cubaan dibenarkan: ${5 - attempts})` };
-                }
-            },
-
-            // 4. verifyToken: Wajib dipanggil oleh semua backend function untuk verifikasi
-            verifyToken() {
-                const sessionData = sessionStorage.getItem(this.tokenName);
-                if (!sessionData) {
-                    this.logAccess("Akses Ditolak", "Gagal (Tiada Token)");
-                    return false;
-                }
-                const parsed = JSON.parse(sessionData);
-                if (new Date().getTime() > parsed.expiry) {
-                    this.logout();
-                    this.logAccess("Token Sesi", "Tamat Tempoh");
-                    return false;
-                }
-                return true;
-            },
-
-            // 5. logout: Log keluar, destroy session token
-            logout() {
-                if(sessionStorage.getItem(this.tokenName)) {
-                    sessionStorage.removeItem(this.tokenName);
-                    this.logAccess("Log Keluar Sistem", "Sesi Ditamatkan");
-                }
-            },
-
-            // 6. saveRecords: Simpan Kredensial Baru ke LocalStorage
-            async saveRecords(newId, newPwd) {
-                if (!this.verifyToken()) return { success: false, msg: "Ralat Keselamatan: Sesi token tidak sah!" };
-                localStorage.setItem('admin_hash_id', await this.sha256(newId));
-                localStorage.setItem('admin_hash_pwd', await this.sha256(newPwd));
-                this.logAccess("Kemas Kini Kredensial Pentadbir", "Berjaya Disimpan");
-                return { success: true, msg: "Kredensial berjaya disulitkan dan dikemaskini!" };
-            },
-
-            // 7. getRecords: Dapatkan senarai log
-            getRecords() {
-                return JSON.parse(localStorage.getItem('admin_access_logs') || '[]');
-            },
-
-            // 8. getSimpleAnalysis: Analisa keselamatan
-            getSimpleAnalysis() {
-                const logs = this.getRecords();
-                const failed = logs.filter(l => l.status.includes('Gagal') || l.status.includes('Dikunci')).length;
-                return `Analisa Sistem: ${logs.length} Log Direkod | ${failed} Ancaman / Kegagalan dikesan.`;
-            },
-
-            // 9. healthCheck: Pemantauan kesihatan
-            healthCheck() {
-                const el = document.getElementById('healthCheckStatus');
-                if(el) el.innerHTML = `<i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i> Aktif & Dilindungi (SHA-256 + Token Session)`;
-            },
-
-            getInitialData() {
-                this.renderLogs();
-            },
-
-            logAccess(activity, status) {
-                const logs = this.getRecords();
-                const now = new Date();
-                logs.unshift({ time: now.toLocaleString('ms-MY'), activity, status });
-                if (logs.length > 50) logs.pop();
-                localStorage.setItem('admin_access_logs', JSON.stringify(logs));
-                this.renderLogs();
-            },
-
-            renderLogs() {
-                const tbody = document.getElementById('logTableBody');
-                if(!tbody) return;
-                tbody.innerHTML = '';
-                const logs = this.getRecords();
-                logs.forEach(log => {
-                    const statusColor = log.status.includes('Berjaya') ? 'text-emerald-700 bg-emerald-100 border-emerald-200' : 'text-rose-700 bg-rose-100 border-rose-200';
-                    tbody.insertAdjacentHTML('beforeend', `
-                        <tr class="hover:bg-slate-50 border-b border-slate-100">
-                            <td class="px-4 py-3 text-sm text-slate-500 font-medium">${log.time}</td>
-                            <td class="px-4 py-3 text-sm font-bold text-slate-700">${log.activity}</td>
-                            <td class="px-4 py-3">
-                                <span class="px-2.5 py-1 rounded-md text-xs font-bold border ${statusColor}">${log.status}</span>
-                            </td>
-                        </tr>
-                    `);
-                });
-                const analysisEl = document.getElementById('simpleAnalysisText');
-                if(analysisEl) analysisEl.innerText = this.getSimpleAnalysis();
-                if (typeof lucide !== 'undefined') lucide.createIcons();
-            }
-        };
-
-        // Jalankan inisialisasi awal
-        BackendApi.doGet();
-
-        // Menggantikan fungsi log masuk sedia ada dengan Backend
-        async function sahkanLogin() {
-            const id = document.getElementById('adminId').value;
-            const pwd = document.getElementById('adminPwd').value;
-            const btn = document.getElementById('loginBtnSahkan');
-            const oriText = btn.innerHTML;
-            
-            btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin mx-auto"></i>`;
-            btn.disabled = true;
-            lucide.createIcons();
-
-            const res = await BackendApi.checkLogin(id, pwd);
-            
-            btn.innerHTML = oriText;
-            btn.disabled = false;
-
-            if (res.success) {
-                tutupModalLoginAdmin();
-                setTimeout(() => {
-                    viewNormal.classList.add('hidden');
-                    dashboardAdmin.classList.remove('hidden');
-                    dashboardAdmin.classList.add('flex');
-                    document.body.classList.remove('maintenance-mode');
-                    BackendApi.getInitialData(); 
-                }, 300);
-            } else {
-                errorMsg.innerText = res.msg;
-                errorMsg.classList.remove('hidden');
-            }
-        }
-
-        function logKeluarAdmin() {
-            BackendApi.logout();
-            dashboardAdmin.classList.add('hidden');
-            dashboardAdmin.classList.remove('flex');
-            viewNormal.classList.remove('hidden');
-            
-            const isMaintenance = document.getElementById('maintenanceToggle').checked;
-            if(isMaintenance) {
-                document.body.classList.add('maintenance-mode');
-            } else {
-                document.body.classList.remove('maintenance-mode');
-            }
-        }
-
         // FUNGSI PERALIHAN TAB ADMIN MENU
         function tukarTabAdmin(tabId) {
             if (!BackendApi.verifyToken()) {
@@ -1336,6 +998,51 @@
                 activeMenu.classList.add('bg-blue-50', 'text-blue-700', 'font-bold');
             }
         }
+
+        // ==========================================
+        // FUNGSI MOD PENYELENGGARAAN (PERSISTENT STATE)
+        // ==========================================
+        function toggleMaintenanceMode(isMaint) {
+            const statusTxt = document.getElementById('maintenanceStatusTxt');
+            
+            // Simpan state ke LocalStorage supaya tak hilang bila refresh
+            localStorage.setItem('amil_maintenance_mode', isMaint ? 'true' : 'false');
+            
+            if(isMaint) {
+                statusTxt.innerText = "Aktif (Sedang diselenggara)";
+                statusTxt.classList.replace('text-slate-600', 'text-red-600');
+            } else {
+                statusTxt.innerText = "Tutup (Off)";
+                statusTxt.classList.replace('text-red-600', 'text-slate-600');
+            }
+        }
+
+        // Fungsi khas yang akan berjalan setiap kali web dibuka/refresh
+        function checkMaintenanceStatusOnLoad() {
+            const isMaint = localStorage.getItem('amil_maintenance_mode') === 'true';
+            
+            // Set butang toggle (jika admin buka dashboard)
+            const toggleBtn = document.getElementById('maintenanceToggle');
+            if(toggleBtn) {
+                toggleBtn.checked = isMaint;
+                // Update teks berpandukan status toggle
+                toggleMaintenanceMode(isMaint); 
+            }
+            
+            // Kuatkuasakan Skrin Penyelenggaraan
+            if(isMaint) {
+                document.body.classList.add('maintenance-mode');
+            } else {
+                document.body.classList.remove('maintenance-mode');
+            }
+        }
+
+        // Panggil pemeriksaan ini sebaik sahaja DOM (web) siap dimuatkan
+        document.addEventListener('DOMContentLoaded', () => {
+            binaGridIkon();
+            checkMaintenanceStatusOnLoad();
+        });
+
 
         // FUNGSI TETAPAN (UBAH ID & KATA LALUAN)
         async function kemaskiniKredensial() {
