@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal Rasmi Amil Kariah - Carian Borang Zakat</title>
+    <title>Amil Kariah - Carian Borang</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -89,8 +89,8 @@
                     <div class="flex items-center gap-3 md:gap-4">
                         <img src="https://lh3.googleusercontent.com/d/1TyX2HrXdzPuONmWFd2Bet8XWW0qGIrfH" alt="Logo Zakat" class="w-12 h-12 md:w-16 md:h-16 object-contain">
                         <div>
-                            <h1 class="font-extrabold text-lg md:text-2xl text-blue-950 leading-tight">Muat Turun Dokumen Permohonan Zakat</h1>
-                            <p class="text-xs md:text-sm text-slate-500 font-semibold mt-0.5">Khusus untuk Ketua & Penolong Amil Kariah</p>
+                            <h1 class="font-extrabold text-lg md:text-2xl text-blue-950 leading-tight">Muat Turun Dokumen Permohonan</h1>
+                            <p class="text-xs md:text-sm text-slate-500 font-semibold mt-0.5">Khusus Ketua & Penolong Amil Kariah</p>
                         </div>
                     </div>
                     
@@ -110,7 +110,7 @@
                 <div id="heroText" class="transition-all duration-500">
                     <i data-lucide="file-search" class="w-20 h-20 text-blue-300/50 mx-auto mb-6"></i>
                     <h2 class="text-3xl md:text-5xl font-extrabold text-white mb-4 leading-tight">
-                        Carian Dokumen Zakat
+                        Carian Dokumen
                     </h2>
                     <p class="text-lg md:text-xl text-blue-100 font-medium mb-10 max-w-2xl mx-auto">
                         Sila masukkan kata kunci untuk mencari dan memuat turun borang permohonan terkini.
@@ -121,7 +121,7 @@
                 <div class="relative flex items-center shadow-2xl rounded-full bg-white/10 backdrop-blur-md p-2 border border-white/20 transition-all duration-300" id="searchContainer">
                     <div class="bg-white w-full flex items-center rounded-full pl-6 pr-2 py-2">
                         <i data-lucide="search" class="w-7 h-7 text-blue-800 shrink-0"></i>
-                        <input type="text" id="searchInput" oninput="prosesCarian()" placeholder="Cth: Kewangan, Pendidikan, Hutang..." 
+                        <input type="text" id="searchInput" oninput="prosesCarian()" placeholder="Cth: Kewangan, Sewa Rumah, Tunggakan..." 
                             class="w-full bg-transparent border-0 focus:ring-0 text-lg md:text-xl text-slate-800 placeholder-slate-400 px-4 font-semibold outline-none h-12 md:h-14">
                         
                         <!-- Butang Clear -->
@@ -230,7 +230,7 @@
 
         <!-- Footer -->
         <footer class="bg-slate-900 text-slate-400 py-6 text-center text-sm font-medium mt-auto relative">
-            <p>&copy; 2026 Portal Rasmi Amil Zakat.</p>
+            <p>&copy; 2026 Myshare2u / Aidee Creative.</p>
         </footer>
     </div>
 
@@ -1178,7 +1178,7 @@
                             <span class="${warna.bg} ${warna.text} text-xs font-bold px-3 py-1 rounded-full border border-current opacity-70">${data.kategoriAsnaf}</span>
                         </div>
                         <h4 class="text-xl font-bold text-slate-800 mb-2">${data.namaFail}</h4>
-                        <p class="text-slate-500 text-sm mb-4 flex-grow">Muat turun dokumen ${data.namaFail} untuk rujukan dan permohonan asnaf.</p>
+                        <p class="text-slate-500 text-sm mb-4 flex-grow">Muat turun dokumen ${data.namaFail} untuk rujukan dan permohonan.</p>
                         <div class="text-xs text-slate-400 mb-4 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> Kemaskini: ${data.tarikhSemasa}</div>
                         <button onclick="muatTurun('${safeNama}', '${safeLink}')" class="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 pointer-events-auto">
                             <i data-lucide="download" class="w-5 h-5"></i> Muat Turun
